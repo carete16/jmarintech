@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: jmarintech
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm rebuild better-sqlite3 --build-from-source
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_PATH
+        value: /var/data/deals.db
+    disk:
+      name: jmarin-db
+      mountPath: /var/data
+      sizeGB: 1

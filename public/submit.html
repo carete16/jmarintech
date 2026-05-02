@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compartir Oferta | +BARATO DEALS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #020617;
+            --text-muted: #64748b;
+            --radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .step {
+            margin-bottom: 30px;
+        }
+
+        .label {
+            display: block;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Preview Card */
+        .preview-box {
+            margin-top: 30px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            display: none;
+        }
+
+        .preview-box.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        #success-msg {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        #success-msg h2 {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            header {
+                padding: 0 4%;
+            }
+
+            .container {
+                margin: 20px auto;
+                padding: 0 10px;
+            }
+
+            .form-card {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .btn-submit {
+                padding: 16px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo" onclick="location.href='/'">+Barato Deals</div>
+    </header>
+
+    <div class="container" id="form-container">
+        <div class="form-card">
+            <h1>Compartir Oferta</h1>
+            <p class="subtitle">Ayuda a la comunidad compartiendo un chollo real. Todas las ofertas son inspeccionadas
+                por nuestro sistema.</p>
+
+            <form id="submit-form">
+                <div class="step">
+                    <label class="label">URL DE LA OFERTA</label>
+                    <input type="url" id="url" placeholder="Pega el enlace de Amazon, eBay, Walmart..." required>
+                    <div id="url-loading" class="loading-spinner">Analizando producto...</div>
+                </div>
+
+                <div id="detailed-fields" style="display: none;">
+                    <div class="step">
+                        <label class="label">TÍTULO DEL ACUERDO</label>
+                        <input type="text" id="title" placeholder="Ej: PlayStation 5 Slim con 2 controles" required>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="step">
+                            <label class="label">PRECIO DE VENTA ($)</label>
+                            <input type="number" step="0.01" id="price" placeholder="449.00" required>
+                        </div>
+                        <div class="step">
+                            <label class="label">PRECIO DE LISTA ($)</label>
+                            <input type="number" step="0.01" id="price_official" placeholder="499.00">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="step">
+                            <label class="label">TIENDA</label>
+                            <select id="store">
+                                <option value="Amazon">Amazon</option>
+                                <option value="Walmart">Walmart</option>
+                                <option value="eBay">eBay</option>
+                                <option value="Best Buy">Best Buy</option>
+                                <option value="Target">Target</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="step">
+                            <label class="label">CATEGORÍA</label>
+                            <select id="category">
+                                <option value="Tecnología">Tecnología</option>
+                                <option value="Gamer">Gamer</option>
+                                <option value="Moda">Moda</option>
+                                <option value="Hogar">Hogar</option>
+                                <option value="Tools">Herramientas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <label class="label">DESCRIPCIÓN / CUPÓN</label>
+                        <textarea id="description" rows="4"
+                            placeholder="Detalles de la oferta o código de cupón si existe..."></textarea>
+                    </div>
+
+                    <input type="hidden" id="image">
+
+                    <button type="submit" class="btn-submit" id="btn-send">ENVIAR PARA INSPECCIÓN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="success-msg">
+        <div class="form-card">
+            <h2>🚀 ¡Recibido!</h2>
+            <p>Tu oferta ha sido enviada a nuestro equipo técnico. <br>Si el algoritmo de verificación confirma que es
+                real y tiene un buen precio, aparecerá en la web y Telegram en unos minutos.</p>
+            <button class="btn-submit" onclick="location.href='/'" style="max-width:300px; margin-top:30px;">VOLVER AL
+                INICIO</button>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('url');
+        const detailedFields = document.getElementById('detailed-fields');
+        const urlLoading = document.getElementById('url-loading');
+        const form = document.getElementById('submit-form');
+
+        // ANALIZADOR AUTOMÁTICO AL PEGAR URL
+        urlInput.addEventListener('change', async () => {
+            const url = urlInput.value;
+            if (!url.startsWith('http')) return;
+
+            urlLoading.style.display = 'block';
+            detailedFields.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/analyze-deal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('title').value = data.title || '';
+                    document.getElementById('price').value = data.price || '';
+                    document.getElementById('store').value = data.store || 'Amazon';
+                    document.getElementById('image').value = data.img || '';
+                    detailedFields.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+                detailedFields.style.display = 'block'; // Mostrar de todos modos para carga manual
+            } finally {
+                urlLoading.style.display = 'none';
+            }
+        });
+
+        // ENVÍO PARA MODERACIÓN
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-send');
+            btn.disabled = true;
+            btn.innerText = 'PROCESANDO...';
+
+            const payload = {
+                title: document.getElementById('title').value,
+                price: parseFloat(document.getElementById('price').value),
+                price_official: parseFloat(document.getElementById('price_official').value || 0),
+                link: document.getElementById('url').value,
+                image: document.getElementById('image').value,
+                store: document.getElementById('store').value,
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value
+            };
+
+            try {
+                const res = await fetch('/api/public-submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    document.getElementById('form-container').style.display = 'none';
+                    document.getElementById('success-msg').style.display = 'block';
+                } else {
+                    alert('Error enviando la oferta. Inténtalo de nuevo.');
+                    btn.disabled = false;
+                    btn.innerText = 'ENVIAR PARA INSPECCIÓN';
+                }
+            } catch (err) {
+                alert('Error de conexión.');
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

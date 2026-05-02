@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo v2.0 | Masbarato Express</title>
+    <link rel="icon" href="https://www.techbargains.com/Content/static/tb-logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-glow: rgba(37, 99, 235, 0.2);
+            --secondary: #6366f1;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --radius: 24px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* --- INPUTS PREMIUM --- */
+        .premium-input-box {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .premium-input-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .premium-input-box label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .premium-input-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1.62rem;
+            font-weight: 900;
+            color: var(--primary);
+            background: transparent;
+        }
+
+        .premium-header {
+            background: white;
+            border-bottom: 2px solid var(--primary);
+            padding: 12px 0;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, #1e40af, #6366f1);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }
+
+        .card-deal {
+            border-radius: 20px;
+            background: white;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-premium);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .breakdown {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #edf2f7;
+        }
+
+        /* === TOOLTIP DE FÓRMULAS === */
+        [data-formula] {
+            position: relative;
+            cursor: help;
+        }
+        [data-formula]:hover::after {
+            content: "📐 " attr(data-formula);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #f0f9ff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            padding: 6px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+            animation: fadeInTip 0.15s ease;
+        }
+        [data-formula]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 1px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1e293b;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        @keyframes fadeInTip {
+            from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .price-cop-display {
+            font-size: 2.2rem;
+            /* Reducido un poco para asegurar que quepa */
+            font-weight: 950;
+            color: var(--primary);
+            letter-spacing: -1px;
+            /* Espaciado más normal */
+            line-height: 1;
+            white-space: nowrap;
+            /* Evitar saltos de línea */
+        }
+
+        /* Ajuste específico para móviles muy pequeños */
+        @media (max-width: 400px) {
+            .price-cop-display {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* --- MODAL IMAGE --- */
+        #mediaModal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #mediaModal img {
+            max-width: 95%;
+            max-height: 90%;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            color: white;
+            font-size: 45px;
+            cursor: pointer;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 768px) {
+            .premium-header .container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo-box {
+                width: 30px;
+                height: 30px;
+            }
+
+            .price-cop-display {
+                font-size: 2rem;
+                /* Ajuste móvil */
+            }
+
+            .img-container {
+                width: 100% !important;
+                height: 280px !important;
+            }
+
+            .card-deal .row .col-md-2 {
+                border-right: none !important;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .card-deal .row .col-md-4 {
+                border-left: none !important;
+                border-top: 1px solid var(--border);
+            }
+
+            .nav-pills-custom {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 15px;
+                margin-bottom: 20px !important;
+            }
+
+            .nav-pills-custom .nav-link {
+                white-space: nowrap;
+                font-size: 0.85rem;
+                padding: 10px 18px;
+            }
+        }
+
+        .breakdown {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #edf2f7;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ef4444;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #10b981;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .nav-pills-custom .nav-link {
+            border-radius: 18px;
+            padding: 12px 25px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: white;
+            border: 1px solid var(--border);
+            margin-right: 10px;
+        }
+
+        .nav-pills-custom .nav-link.active {
+            background: var(--primary) !important;
+            color: white !important;
+            border-color: var(--primary);
+        }
+
+        .img-container {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 18px;
+            padding: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #f1f5f9;
+        }
+
+        .img-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .img-container::after {
+            content: "\f00e";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 16px;
+            opacity: 0;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .img-container:hover::after {
+            opacity: 1;
+        }
+
+        .btn-ia-magic {
+            background: #eff6ff;
+            color: var(--primary);
+            border: 1px solid var(--primary-glow);
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .manual-alert-premium {
+            background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 5px solid var(--accent-yellow);
+            color: #92400e;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            animation: pulse-yellow 2s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
+        .img-preview-mini:hover {
+            border-color: var(--primary) !important;
+            transform: scale(1.05);
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="premium-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="logo-box"><i class="fa-solid fa-plane-up"></i></div>
+                <div>
+                    <h1 class="h5 fw-bold mb-0">Masbarato <span style="color:var(--secondary)">Express</span></h1>
+                    <p class="text-muted small mb-0 fw-semibold">Admin Panel Pro</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-1">
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="badge bg-white border text-dark p-2 rounded-3 small fw-bold">TRM Real: <span
+                            class="text-primary" id="trm-real">$0</span></div>
+                    <div class="badge bg-white border text-dark p-2 rounded-3 small fw-bold">Operativo: <span
+                            class="text-primary" id="trm-op">$0</span></div>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="toggleConfig()">
+                        <i class="fa-solid fa-gear me-1"></i> CONFIGURACIÓN
+                    </button>
+                </div>
+                <div id="trm-date" class="text-muted" style="font-size: 0.65rem; font-weight: 700;">TRM última
+                    actualización: <span id="trm-time">Cargando...</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SYSTEM HEALTH DASHBOARD -->
+    <div class="container mb-4">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <div class="xsmall fw-bold text-muted mb-1">🤖 ESTADO IA</div>
+                    <div id="health-ai" class="fw-bold"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <div class="xsmall fw-bold text-muted mb-1">💱 TRM OPERATIVA</div>
+                    <div id="health-trm" class="fw-bold text-primary">$ -- COP</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <div class="xsmall fw-bold text-muted mb-1">📦 TOTAL DEALS</div>
+                    <div id="health-deals" class="fw-bold text-dark">--</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-0 shadow-sm rounded-4 text-center">
+                    <div class="xsmall fw-bold text-muted mb-1">📡 ÚLTIMO CICLO</div>
+                    <div id="health-cycle" class="fw-bold text-muted" style="font-size: 0.7rem;">Cargando...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Dashboard Params -->
+        <div id="configRow" class="row mb-4 g-3 dashboard-params-row d-none">
+            <div class="col-6 col-md-2">
+                <div class="premium-input-box">
+                    <label class="text-primary">Dólar TRM+</label>
+                    <input type="number" id="globalDolarOp" value="3910" onchange="saveConfig(true); refreshView()">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="premium-input-box">
+                    <label class="text-primary">Margen TRM ($)</label>
+                    <input type="number" id="globalTrmMarkup" value="300" onchange="saveConfig(); fetchTRM();">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="premium-input-box">
+                    <label class="text-primary">$/Libra</label>
+                    <input type="number" id="globalRate" value="6" onchange="saveConfig(); refreshView()">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="premium-input-box">
+                    <label class="text-success">Ganancia %</label>
+                    <input type="number" id="globalProfit" value="30" onchange="saveConfig(); refreshView()">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="premium-input-box">
+                    <label class="text-danger">USA Tax %</label>
+                    <input type="number" id="globalTax" value="7" onchange="saveConfig(); refreshView()">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="premium-input-box h-100" style="background: #f8fafc;">
+                    <label><i class="fa-solid fa-search me-1"></i> Buscador</label>
+                    <input type="text" id="searchTerm" placeholder="Filtrar por nombre..."
+                        oninput="renderItemsFiltered()" style="font-size: 1.2rem;">
+                </div>
+            </div>
+        </div>
+
+        <!-- USA Super Search (PS5, iPhone, etc) -->
+        <div class="card p-4 border-0 shadow-lg rounded-4 mb-4" 
+             style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <h5 class="fw-bold mb-1"><i class="fa-solid fa-magnifying-glass-plus me-2 text-primary"></i> Super Buscador USA</h5>
+                    <p class="small text-muted mb-0">Busca cualquier producto (PS5, iPhone 13, etc.) en tiempo real en USA.</p>
+                </div>
+                <div class="col-md-7">
+                    <div class="input-group">
+                        <input type="text" id="usaSearchQuery" class="form-control border-0 bg-dark text-white" 
+                               placeholder="Ej: PlayStation 5 Console..." style="border-radius: 15px 0 0 15px; border: 1px solid #334155 !important;">
+                        <button onclick="searchUSA()" id="btnSearchUSA" class="btn btn-primary px-4 fw-bold" 
+                                style="border-radius: 0 15px 15px 0;">BUSCAR EN USA</button>
+                    </div>
+                </div>
+            </div>
+            <div id="usaSearchResults" class="row g-3 mt-3 d-none">
+                <!-- Resultados de búsqueda USA -->
+            </div>
+        </div>
+
+        <!-- Quick Post -->
+        <div class="card p-4 border-0 shadow-sm rounded-4 mb-5"
+            style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-1"><i class="fa-solid fa-link me-2"></i> Procesar Enlace Directo</h5>
+                    <p class="small text-muted mb-0">Pega el link de Amazon, Nike, eBay, etc.</p>
+                </div>
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <input type="text" id="manualUrl" class="form-control border-0"
+                            placeholder="https://www.amazon.com/dp/..." style="border-radius: 15px 0 0 15px;">
+                        <button onclick="postManual()" id="btnProcess" class="btn btn-primary px-4 fw-bold"
+                            style="border-radius: 0 15px 15px 0;">PROCESAR LINK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <ul class="nav nav-pills nav-pills-custom m-0">
+                <li class="nav-item"><button class="nav-link active" id="tab-pending"
+                        onclick="switchTab('pending')">PENDIENTES</button></li>
+                <li class="nav-item"><button class="nav-link" id="tab-published"
+                        onclick="switchTab('published')">PUBLICADAS / VIVO</button></li>
+                <li class="nav-item"><button class="nav-link" id="tab-archived"
+                        onclick="switchTab('archived')">HISTORIAL / ARCHIVO</button></li>
+            </ul>
+            <div class="d-flex gap-2">
+                <button onclick="runManualScan()"
+                    class="btn btn-primary btn-sm fw-bold rounded-pill px-3 shadow-sm"
+                    style="font-size: 0.7rem;">
+                    <i class="fa-solid fa-satellite-dish me-1"></i> ESCANEAR AHORA
+                </button>
+                <button onclick="runHealthCheck()"
+                    class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-3 shadow-sm"
+                    style="font-size: 0.7rem; background: white;">
+                    <i class="fa-solid fa-stethoscope me-1 text-primary"></i> CHEQUEO PROFESIONAL
+                </button>
+            </div>
+        </div>
+
+        <div id="health-check-results" class="mb-4 d-none">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0"><i class="fa-solid fa-microchip me-2 text-primary"></i> DIAGNÓSTICO DEL
+                        SISTEMA</h6>
+                    <button onclick="document.getElementById('health-check-results').classList.add('d-none')"
+                        class="btn-close" style="font-size: 0.6rem;"></button>
+                </div>
+                <div id="health-details" class="row g-3">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <div id="main-container"></div>
+    </div>
+
+    <!-- Modal para zoom de imagen -->
+    <div id="mediaModal">
+        <span class="close-modal" onclick="closeZoom()">&times;</span>
+        <img id="modalImg" src="">
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let currentTab = 'pending';
+
+        // --- FUNCIONES DE ZOOM PROFESIONAL ---
+        function openZoom(imgUrl) {
+            if (!imgUrl) return;
+            const modal = document.getElementById('mediaModal');
+            const modalImg = document.getElementById('modalImg');
+            // Usar el proxy para mayor fidelidad
+            modalImg.src = '/api/proxy-image?url=' + encodeURIComponent(imgUrl);
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Evitar scroll
+        }
+
+        function closeZoom() {
+            const modal = document.getElementById('mediaModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleConfig() {
+            const row = document.getElementById('configRow');
+            row.classList.toggle('d-none');
+        }
+
+        // Cerrar modal al hacer click fuera de la imagen
+        window.onclick = function (event) {
+            const modal = document.getElementById('mediaModal');
+            if (event.target == modal) closeZoom();
+        }
+
+        async function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+            document.getElementById('tab-published').classList.toggle('active', tab === 'published');
+            document.getElementById('tab-archived').classList.toggle('active', tab === 'archived');
+            await loadData();
+        }
+
+        async function postManual() {
+            const urlInput = document.getElementById('manualUrl');
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert("⚠️ Por favor ingresa un enlace para procesar.");
+                return;
+            }
+
+            const btn = document.getElementById('btnProcess');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PROCESANDO...';
+            btn.disabled = true;
+
+            try {
+                // NORMALIZAR LINK (Llamada al backend)
+                const analysisRes = await axios.post(API_URL + '/admin/express/analyze', { url }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                const data = analysisRes.data;
+
+                // Crear el borrador en la DB
+                const manualPostRes = await axios.post(API_URL + '/admin/express/manual-post', {
+                    url: data.url,
+                    price: data.price || 0,
+                    weight: data.weight || 0,
+                    category: data.categoria || 'Lifestyle & Street',
+                    title: data.title || '',
+                    image: data.image || '',
+                    store: data.store,
+                    specs: data.specs || ''
+                }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                const newId = manualPostRes.data.id;
+
+                // Éxito directo sin esperar respuesta compleja
+                urlInput.value = '';
+                alert(`✅ ENLACE PROCESADO\nTienda: ${data.store}\n\nEl producto está en PENDIENTES con specs auto-detectadas.`);
+                switchTab('pending');
+                await loadData(); // Recargar la lista
+
+                // ✨ AUTO-RELLENO DE SPECS: Ejecutar después de que el DOM esté listo
+                if (newId) {
+                    setTimeout(() => autoFillSpecsFromAnalysis(newId, data), 400);
+                }
+            } catch (e) {
+                console.error("DEBUG ERROR LINK:", e);
+                const serverMsg = e.response?.data?.error || "Error desconocido en el servidor";
+                alert(`❌ FALLO EL PROCESAMIENTO:\n${serverMsg}\n\nPrueba con un link directo del producto.`);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function searchUSA() {
+            const query = document.getElementById('usaSearchQuery').value.trim();
+            if (!query) return alert("Ingresa un producto");
+
+            const btn = document.getElementById('btnSearchUSA');
+            const resultsDiv = document.getElementById('usaSearchResults');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> BUSCANDO...';
+            btn.disabled = true;
+
+            try {
+                const res = await axios.get(API_URL + '/admin/search?q=' + encodeURIComponent(query), {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                const results = res.data.results;
+                resultsDiv.innerHTML = '';
+                resultsDiv.classList.remove('d-none');
+
+                if (!results || results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="col-12 text-center text-muted">No se encontraron resultados exactos en USA.</div>';
+                } else {
+                    results.forEach(item => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4';
+                        col.innerHTML = `
+                            <div class="card bg-dark border-secondary p-2 h-100" style="border: 1px solid #334155 !important;">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <img src="${item.image || 'https://placehold.co/100'}" style="width:60px; height:60px; object-fit:contain; border-radius:10px;">
+                                    <div style="flex:1">
+                                        <div class="small fw-bold text-white text-truncate" style="max-width:180px">${item.title}</div>
+                                        <div class="text-primary fw-bold">$${item.referencePrice} USD</div>
+                                        <button onclick="importUSAItem('${btoa(JSON.stringify(item))}')" class="btn btn-outline-primary btn-sm mt-1 w-100 py-0" style="font-size:0.6rem">IMPORTAR</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        resultsDiv.appendChild(col);
+                        
+                        // Ejecutar pre-llenado de marketing al cargar (si está vacío)
+                        setTimeout(() => preFillMarketingData(item.id), 100);
+                    });
+                }
+            } catch (e) {
+                alert("Error en búsqueda: " + e.message);
+            } finally {
+                btn.innerHTML = 'BUSCAR EN USA';
+                btn.disabled = false;
+            }
+        }
+
+        async function importUSAItem(base64) {
+            const item = JSON.parse(atob(base64));
+            const btn = event.target;
+            btn.innerHTML = 'IMPORTANDO...';
+            btn.disabled = true;
+
+            try {
+                await axios.post(API_URL + '/admin/express/manual-post', {
+                    url: item.sourceLink,
+                    price: item.referencePrice || 0,
+                    weight: 3, // Default
+                    category: item.categoria || 'Electrónica Premium',
+                    title: item.title,
+                    image: item.image,
+                    store: item.tienda
+                }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                btn.innerHTML = '✅ IMPORTADO';
+                btn.classList.replace('btn-outline-primary', 'btn-success');
+                loadData();
+            } catch (e) {
+                alert("Error al importar: " + e.message);
+                btn.innerHTML = 'ERROR';
+                btn.disabled = false;
+            }
+        }
+
+        function calculateFinal(priceUSD, weightLbs, itemCustomDolar = 0, itemCustomProfit = 0) {
+            let dolarOp = parseInt(document.getElementById('globalDolarOp').value) || 3928;
+            if (itemCustomDolar > 0) dolarOp = itemCustomDolar;
+            
+            const shipRate = parseFloat(document.getElementById('globalRate').value) || 6;
+            
+            let profitPercent = (parseFloat(document.getElementById('globalProfit').value) || 0) / 100;
+            if (itemCustomProfit > 0) profitPercent = itemCustomProfit / 100;
+
+            const taxPercent = (parseFloat(document.getElementById('globalTax').value) || 0) / 100;
+
+            // Limpieza y validación de peso
+            let w = weightLbs;
+            if (typeof w === 'string') w = parseFloat(w.replace(',', '.')) || 0;
+            if (isNaN(w) || w < 0) w = 0;
+
+            const pUSD = parseFloat(priceUSD) || 0;
+            if (pUSD <= 0) return null;
+
+            // 1. Costo Base + Impuestos
+            const taxUSD = pUSD * taxPercent;
+            const costForMarkup = pUSD + taxUSD;
+
+            // 2. ✅ MARKUP (Ganancia sobre Costo)
+            // Ganancia = Costo × % | PV = Costo × (1 + %)
+            const profitVal = costForMarkup * profitPercent;
+            const priceWithProfit = costForMarkup + profitVal;
+
+            // 3. Envio al final (costo pasante)
+            const shipUSD = Math.ceil(w) * shipRate;
+            const totalUSD = priceWithProfit + shipUSD;
+
+            const finalCOP = Math.ceil(totalUSD * dolarOp / 1000) * 1000;
+
+            return { profitVal, taxUSD, shipUSD, totalUSD, finalCOP, dolarOp, profitPercent, taxPercent, costForMarkup };
+        }
+
+        let ALL_ITEMS = [];
+
+        function saveConfig(fromUser = false) {
+            const config = {
+                dolar: document.getElementById('globalDolarOp').value,
+                markup: document.getElementById('globalTrmMarkup').value,
+                rate: document.getElementById('globalRate').value,
+                profit: document.getElementById('globalProfit').value,
+                tax: document.getElementById('globalTax').value
+            };
+            localStorage.setItem('express_config', JSON.stringify(config));
+            // Marcar que el usuario guardó su propio valor de dólar operativo
+            if (fromUser) localStorage.setItem('express_dolar_personalizado', '1');
+        }
+
+        function loadConfig() {
+            const config = JSON.parse(localStorage.getItem('express_config'));
+            if (config) {
+                if (config.dolar) document.getElementById('globalDolarOp').value = config.dolar;
+                if (config.markup) document.getElementById('globalTrmMarkup').value = config.markup;
+                if (config.rate) document.getElementById('globalRate').value = config.rate;
+                if (config.profit) document.getElementById('globalProfit').value = config.profit;
+                if (config.tax) document.getElementById('globalTax').value = config.tax;
+            }
+        }
+
+        async function updateHealth() {
+            try {
+                const res = await axios.get(API_URL + '/status');
+                const data = res.data;
+                
+                const aiEl = document.getElementById('health-ai');
+                if (data.ai_active) {
+                    aiEl.innerHTML = '<span class="text-success"><i class="fa-solid fa-check-circle me-1"></i>ACTIVA</span>';
+                } else {
+                    aiEl.innerHTML = '<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i>SIN LLAVES .ENV</span>';
+                }
+                
+                document.getElementById('health-trm').innerText = `$${data.trm} COP`;
+                document.getElementById('health-deals').innerText = data.total_deals;
+                document.getElementById('health-cycle').innerText = new Date(data.last_cycle).toLocaleTimeString();
+            } catch(e) {}
+        }
+
+        async function loadData() {
+            updateHealth();
+            const container = document.getElementById('main-container');
+            container.innerHTML = '<div class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+
+            try {
+                let endpoint = '/admin/express/pending';
+                if (currentTab === 'published') endpoint = '/admin/express/published';
+                if (currentTab === 'archived') endpoint = '/admin/express/archived';
+
+                const res = await axios.get(API_URL + endpoint, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                ALL_ITEMS = res.data;
+                renderItemsFiltered();
+            } catch (e) { container.innerHTML = '<div class="text-center py-5 text-danger">Error al cargar datos.</div>'; }
+        }
+
+        function renderItemsFiltered() {
+            const term = document.getElementById('searchTerm').value.toLowerCase();
+            const filtered = ALL_ITEMS.filter(item =>
+                (item.title || '').toLowerCase().includes(term) ||
+                (item.tienda || '').toLowerCase().includes(term) ||
+                (item.id || '').toLowerCase().includes(term)
+            );
+            renderItems(filtered);
+        }
+
+        function renderItems(items) {
+            const container = document.getElementById('main-container');
+            container.innerHTML = '';
+            if (!items.length) { container.innerHTML = '<div class="text-center py-5 text-muted">No hay ofertas en esta sección.</div>'; return; }
+
+            items.forEach(item => {
+                const priceUSD = parseFloat(item.price_offer) || 0;
+                const isFreshManual = !item.title || item.title === '';
+                const iaValue = guessIA(item.title || '');
+                const itemWeight = parseFloat(item.weight) || 0;
+                const finalWeight = (itemWeight > 0) ? itemWeight : iaValue.weight;
+                const finalCat = (item.categoria && item.categoria !== 'General' && item.categoria !== 'Oferta') ? item.categoria : iaValue.cat;
+
+                const calc = calculateFinal(priceUSD, finalWeight, item.custom_dolar, item.custom_profit_percent);
+                const isPending = currentTab === 'pending';
+                const isLive = item.status === 'published';
+                
+                let structured = {};
+                try { 
+                    structured = typeof item.structured_specs === 'string' ? JSON.parse(item.structured_specs) : (item.structured_specs || {});
+                } catch(e) { structured = {}; }
+
+                const card = document.createElement('div');
+                card.className = 'card card-deal';
+                if (isFreshManual) card.style.border = "3px solid #f59e0b";
+
+                card.innerHTML = `
+                <div class="row g-0 align-items-center">
+                    <div class="col-md-2 p-4 text-center border-end">
+                        <div class="img-container mx-auto mb-3 shadow-sm" id="preview-box-${item.id}" onclick="openZoom('${item.image || ''}')">
+                            <img src="${item.image ? '/api/proxy-image?url=' + encodeURIComponent(item.image) : 'https://placehold.co/400?text=SIN+FOTO'}">
+                            ${!item.image ? '<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); font-weight:800; color:var(--accent-red); font-size:0.7rem;">REQUERIDO</div>' : ''}
+                        </div>
+                        <div class="badge bg-primary px-3 py-1 mb-1 w-100">${item.tienda.toUpperCase()}</div>
+                        <a href="${item.original_link || item.link}" target="_blank" class="d-block xsmall fw-bold text-primary mb-2 text-decoration-none" style="font-size: 0.6rem;"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i> VER LINK ORIGINAL</a>
+                        <div class="fw-bold text-center text-primary mb-2" style="font-size: 1.2rem;">$${priceUSD.toFixed(2)} USD</div>
+                        <label class="xsmall fw-bold text-muted d-block text-start mb-1" style="font-size:0.6rem;">URL IMAGEN PRINCIPAL:</label>
+                        <input type="text" class="form-control form-control-sm xsmall ${!item.image ? 'border-danger' : ''}" id="img-${item.id}" value="${item.image || ''}" oninput="updateRow('${item.id}')" placeholder="Link de foto">
+                    </div>
+                    
+                    <div class="col-md-6 p-4">
+                        ${isFreshManual ? `
+                            <div class="manual-alert-premium">
+                                <i class="fa-solid fa-wand-sparkles fa-bounce me-2"></i> 
+                                <strong>MODO MANUAL REQUERIDO:</strong> Este enlace (Sovrn/Afiliado) no permite la extracción automática. 
+                                <br><small>Por favor, ingresa el Título, Precio y una Imagen manualmente para poder publicar.</small>
+                            </div>` : ''}
+                        
+                        <div id="price-warning-${item.id}" class="alert alert-danger py-1 px-3 mb-3 small fw-bold ${priceUSD > 0 ? 'd-none' : ''}">
+                            <i class="fa-solid fa-circle-xmark me-2"></i> ERROR: Debes ingresar el precio real del producto en USD.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small fw-bold text-muted">TÍTULO DEL PRODUCTO ${!item.title ? '<span class="text-danger">* REQUERIDO</span>' : ''}</label>
+                            ${!isFreshManual && item.title ? `<button onclick="applyIA('${item.id}')" class="btn-ia-magic"><i class="fa-solid fa-wand-sparkles"></i> LIMPIAR TITULO</button>` : ''}
+                        </div>
+                        <textarea class="form-control fw-bold border mb-3 ${!item.title ? 'border-danger' : ''}" rows="2" style="font-size: 1.1rem; border-radius: 12px; background: ${!item.title ? '#fff9f9' : '#fff'}" id="title-${item.id}" placeholder="Nombre del producto aquí...">${item.title || ''}</textarea>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="small fw-bold text-muted mb-1">PRECIO USD ${priceUSD <= 0 ? '<span class="text-danger">*</span>' : ''}</label>
+                                <input type="number" id="price-${item.id}" value="${priceUSD}" class="form-control fw-bold text-center border-primary shadow-sm" oninput="updateRow('${item.id}')" placeholder="0.00" style="font-size: 1.1rem;">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold text-muted mb-1">PESO LBS <span class="badge bg-light text-primary border" style="font-size: 0.6rem;">🤖 IA + 📦 Caja</span></label>
+                                <input type="text" id="weight-${item.id}" value="${finalWeight}" class="form-control fw-bold text-center" oninput="updateRow('${item.id}')" style="font-size: 1.1rem;">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold text-muted mb-1">CATEGORÍA</label>
+                                <select id="cat-${item.id}" class="form-select form-select-sm fw-bold" onchange="updateRow('${item.id}')">
+                                    <option value="Lifestyle & Street" ${finalCat === 'Lifestyle & Street' ? 'selected' : ''}>Lifestyle & Street</option>
+                                    <option value="Electrónica Premium" ${finalCat === 'Electrónica Premium' ? 'selected' : ''}>Electrónica Premium</option>
+                                    <option value="Relojes & Wearables" ${finalCat === 'Relojes & Wearables' ? 'selected' : ''}>Relojes & Wearables</option>
+                                    <option value="Hogar & Deco" ${finalCat === 'Hogar & Deco' ? 'selected' : ''}>Hogar & Deco</option>
+                                    <option value="Otros" ${finalCat === 'Otros' ? 'selected' : ''}>Otros</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="small fw-bold text-muted">💻 ESPECIFICACIONES TÉCNICAS DESTACADAS</label>
+                                <button onclick="autoExtractSpecs('${item.id}')" class="btn-ia-magic" style="background: #0ea5e9; color: white;"><i class="fa-solid fa-microchip"></i> AUTO-DETECTAR</button>
+                            </div>
+                            <div class="p-3 border rounded-4 bg-white shadow-sm">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="xsmall fw-bold text-muted">📺 Pantalla</label>
+                                        <input type="text" id="spec-screen-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.screen || ''}" placeholder='Ej: 14" FHD' oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="xsmall fw-bold text-muted">🧠 Procesador</label>
+                                        <input type="text" id="spec-cpu-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.cpu || ''}" placeholder="Ej: Core i5-10310U" oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="xsmall fw-bold text-muted">⚡ Vel. CPU</label>
+                                        <input type="text" id="spec-speed-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.speed || ''}" placeholder="Ej: 1.7 GHz" oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="xsmall fw-bold text-muted">📊 RAM</label>
+                                        <input type="text" id="spec-ram-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.ram || ''}" placeholder="Ej: 8GB DDR4" oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="xsmall fw-bold text-muted">💾 Disco</label>
+                                        <input type="text" id="spec-disk-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.disk || ''}" placeholder="Ej: 256GB SSD" oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="xsmall fw-bold text-muted">📷 Cámara</label>
+                                        <input type="text" id="spec-cam-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.cam || ''}" placeholder="Ej: Integrada HD" oninput="updateRow('${item.id}')">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="xsmall fw-bold text-muted">🔌 Puertos</label>
+                                        <input type="text" id="spec-ports-${item.id}" class="form-control form-control-sm spec-input-${item.id}" value="${structured.ports || ''}" placeholder="Ej: USB-C, HDMI, LAN" oninput="updateRow('${item.id}')">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="small fw-bold text-muted">📝 DESCRIPCIÓN Y NOTAS EXTRA (Opcional)</label>
+                                <button onclick="optimizeAll('${item.id}')" class="btn-ia-magic" style="background: #7c3aed; color: white;"><i class="fa-solid fa-sparkles"></i> OPTIMIZAR TODO</button>
+                            </div>
+                            <textarea class="form-control xsmall border" rows="3" id="specs-${item.id}" placeholder="Pega aquí las especificaciones del sitio original..." style="font-size: 0.75rem; border-radius: 12px; background: #f8fafc;">${item.original_specs || item.specs || ''}</textarea>
+                            <input type="hidden" id="structured-specs-${item.id}" value='${item.structured_specs || "{}"}'>
+                        </div>
+
+                        <!-- PERSONALIZACIÓN DE PRECIOS -->
+                        <div class="p-3 mb-3 border rounded-4 bg-white shadow-sm">
+                            <h6 class="xsmall fw-bold text-primary mb-2"><i class="fa-solid fa-sliders me-2"></i> AJUSTES INDIVIDUALES (Opcional)</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Dólar para este item</label>
+                                    <input type="number" id="custom-dolar-${item.id}" value="${item.custom_dolar || ''}" class="form-control form-control-sm fw-bold" placeholder="Usar Global" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Ganancia %</label>
+                                    <input type="number" id="custom-profit-${item.id}" value="${item.custom_profit_percent || ''}" class="form-control form-control-sm fw-bold" placeholder="Usar Global" oninput="updateRow('${item.id}')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ✨ DATOS DE VENTA (NUEVOS CAMPOS) -->
+                        <div class="p-3 mb-3 border rounded-4 bg-white shadow-sm" style="border-left: 4px solid #f59e0b !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="xsmall fw-bold text-warning mb-0"><i class="fa-solid fa-star me-2"></i> ✨ DATOS DE VENTA (MARKETING)</h6>
+                                <button onclick="autoFillSellingData('${item.id}')" class="btn btn-sm py-0 px-2 fw-bold" style="background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; font-size: 0.6rem;">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> MÁGICA IA
+                                </button>
+                                <button onclick="searchMarket(document.getElementById('title-${item.id}').value)" class="btn btn-sm py-0 px-2 fw-bold ms-2" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.6rem;">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> BUSCAR EN CO
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="xsmall fw-bold text-muted">Título de Venta (Persuasivo)</label>
+                                    <input type="text" id="selling-title-${item.id}" value="${item.selling_title || ''}" class="form-control form-control-sm" placeholder="Ej: ¡Súper Oferta! Dell Latitude..." oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Precio Original (USD)</label>
+                                    <input type="number" id="original-price-${item.id}" value="${item.original_price || ''}" class="form-control form-control-sm" placeholder="0.00" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Ahorro (%)</label>
+                                    <input type="number" id="savings-${item.id}" value="${item.savings || ''}" class="form-control form-control-sm" placeholder="Ej: 30" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Badge / Etiqueta</label>
+                                    <input type="text" id="badge-${item.id}" value="${item.badge || ''}" class="form-control form-control-sm" placeholder="Ej: TOP VENTAS" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-12">
+                                    <label class="xsmall fw-bold text-muted">Precio Mercado COP (Referencia Manual)</label>
+                                    <input type="text" id="market-price-cop-${item.id}" value="${item.market_price_cop || ''}" class="form-control form-control-sm" placeholder="Ej: 3.500.000" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-12">
+                                    <label class="xsmall fw-bold text-muted">Beneficios (1 por línea)</label>
+                                    <textarea id="benefits-${item.id}" class="form-control form-control-sm xsmall" rows="2" placeholder="Ej: Envío gratis, Garantía 1 año..." oninput="updateRow('${item.id}')">${(() => {
+                                        let benefits = item.benefits || '[]';
+                                        try { 
+                                            const arr = JSON.parse(benefits);
+                                            return Array.isArray(arr) ? arr.join('\n') : benefits;
+                                        } catch(e) { return benefits; }
+                                    })()}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    <!-- GALERÍA SECUNDARIA (HASTA 6 Imágenes) -->
+                    <div class="gallery-editor mt-3 p-3 rounded-4 bg-light border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                             <label class="small fw-bold text-muted mb-0"><i class="fa-solid fa-images me-2"></i> GALERÍA SECUNDARIA (OPCIONAL - LINKS)</label>
+                             <span class="badge bg-white border text-primary" style="font-size: 0.6rem;">6 SLOTS DISPONIBLES</span>
+                        </div>
+                        <div class="row g-2">
+                            ${(() => {
+                        let gallery = [];
+                        try { gallery = JSON.parse(item.gallery || '[]'); } catch (e) { }
+                        let html = '';
+                        for (let i = 0; i < 6; i++) {
+                            const val = gallery[i] || '';
+                            html += `
+                                            <div class="col-4 col-md-2">
+                                                <div class="img-preview-mini mb-1 border rounded shadow-sm" style="height: 50px; overflow:hidden; background: #fff; display:flex; align-items:center; justify-content:center;">
+                                                    <img src="${val ? '/api/proxy-image?url=' + encodeURIComponent(val) : 'https://placehold.co/100?text=+'}" id="gal-prev-${item.id}-${i}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                                                </div>
+                                                <input type="text" class="form-control form-control-sm xsmall gallery-input-${item.id}" value="${val}" oninput="updateGalleryPreview('${item.id}', ${i})" style="font-size: 0.6rem; padding: 2px 4px;" placeholder="Link...">
+                                            </div>`;
+                        }
+                        return html;
+                    })()}
+                        </div>
+                    </div>
+
+                    <div class="breakdown mt-3" style="background: #f1f5f9; border-radius: 15px; padding: 15px;">
+                        <h6 class="small fw-bold text-uppercase mb-3" style="letter-spacing: 1px;"><i class="fa-solid fa-calculator me-2"></i>Desglose Matemático</h6>
+                        
+                        <div class="d-flex justify-content-between mb-1 small">
+                            <span>Precio Base (USD):</span>
+                            <span class="fw-bold" id="base-val-${item.id}">$${priceUSD.toFixed(2)} USD</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1 small" data-formula="Tax USA = Precio Base × Porcentaje de Impuesto">
+                            <span id="label-tax-${item.id}">Tax USA (${(calc.taxPercent * 100).toFixed(0)}%):</span>
+                            <span class="fw-bold" id="tax-val-${item.id}">+$${calc.taxUSD.toFixed(2)} USD</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1 small" data-formula="Ganancia = (Precio Base + Tax) × Porcentaje de Ganancia">
+                            <span id="label-profit-${item.id}" class="text-primary fw-bold">GANANCIA (${(calc.profitPercent * 100).toFixed(0)}%):</span>
+                            <span class="text-success fw-bold" id="profit-val-${item.id}">+$${calc.profitVal.toFixed(2)} USD</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom small" data-formula="Envío = Libras Redondeadas × Tarifa por Libra">
+                            <span>Envío Internacional:</span>
+                            <span class="fw-bold" id="ship-val-${item.id}">+$${calc.shipUSD.toFixed(2)} USD</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between fw-bold text-dark pt-1" data-formula="Total = (Precio Base + Tax + Ganancia) + Envío Internacional">
+                            <span>TOTAL USD:</span>
+                            <span id="total-val-${item.id}">$${calc.totalUSD.toFixed(2)} USD</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between small text-muted mt-1" data-formula="Precio en Pesos = Total en Dólares × Tasa de Cambio Operativa">
+                            <span>Tasa TRM+:</span>
+                            <span class="fw-bold">$${calc.dolarOp} COP</span>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="col-md-4 p-4 text-center d-flex flex-column justify-content-center border-start">
+                    <span class="small text-muted fw-bold mb-1">SUBTOTAL FINAL A RECAUDAR</span>
+                    <div class="price-cop-display mb-1" id="cop-${item.id}" title="Fórmula: Total USD * Dólar Operativo (Redondeado)" style="font-size: 2.5rem;">$ ${new Intl.NumberFormat('es-CO').format(calc.finalCOP)}</div>
+                    <!-- Precio referencia Google -->
+                    <div id="google-price-box-${item.id}" class="mb-3 px-2 py-1 rounded-3" style="background:#f0f9ff; border:1px solid #bfdbfe;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="font-size:0.65rem; color:#2563eb; font-weight:700;"><i class="fa-brands fa-google me-1"></i> Ref. Colombia:</span>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span id="google-price-val-${item.id}" style="font-size:0.7rem;" class="text-muted">No consultado</span>
+                                <button onclick="searchGoogle('${item.id}')" class="btn btn-link p-0" title="Consultar en Google Colombia">
+                                    <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="google-price-range-${item.id}" style="font-size:0.58rem; color:#6b7280;"></div>
+                    </div>
+                    <div class="text-success fw-bold small mb-4" style="font-size: 0.7rem;">Precio final en Colombia. Sin sorpresas.</div>
+                        
+                        ${isPending ?
+                        `                            <button onclick="toggleStatus('${item.id}', true)" class="btn btn-primary fw-bold p-3 w-100 rounded-4 mb-2">APROBAR Y PUBLICAR <i class="fa-solid fa-paper-plane ms-2"></i></button>
+                            <button onclick="saveChanges('${item.id}')" class="btn btn-outline-primary btn-sm fw-bold w-100 rounded-3 mb-2"><i class="fa-solid fa-check me-1"></i> GUARDAR SIN PUBLICAR</button>
+                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                        ` :
+                        `
+                            <div class="mb-3">
+                                <span class="status-label ${isLive ? 'text-success' : 'text-danger'}">${isLive ? 'OFERTA ACTIVA ✅' : 'OFERTA AGOTADA ❌'}</span>
+                                <label class="switch">
+                                    <input type="checkbox" ${isLive ? 'checked' : ''} onchange="toggleStatus('${item.id}', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <button onclick="saveChanges('${item.id}')" class="btn btn-info btn-sm text-white fw-bold w-100 rounded-3 mb-2"><i class="fa-solid fa-floppy-disk me-1"></i> GUARDAR CAMBIOS</button>
+                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                            `
+                    }
+                        
+                        <div class="mt-4 d-flex justify-content-center gap-4">
+                            <a href="${item.original_link || item.link}" target="_blank" class="small fw-bold text-primary text-decoration-none"><i class="fa-solid fa-external-link me-1"></i> LINK ORIGINAL</a>
+                            ${currentTab === 'archived' ?
+                        `<button onclick="toggleStatus('${item.id}', true)" class="btn btn-link p-0 text-success small fw-bold text-decoration-none">RE-ESTABLECER</button>` :
+                        `<button onclick="archiveItem('${item.id}')" class="btn btn-link p-0 text-warning small fw-bold text-decoration-none">ARCHIVAR</button>`
+                    }
+                            <button onclick="removeItem('${item.id}')" class="btn btn-link p-0 text-danger small fw-bold text-decoration-none">ELIMINAR</button>
+                        </div>
+                    </div>
+                </div>`;
+                container.appendChild(card);
+                // Auto-cargar precio de referencia Google Colombia
+                // YA NO AUTO-CARGAMOS (Para mayor velocidad)
+                /* if (item.title) {
+                    setTimeout(() => loadGooglePrice(item.id, item.title), 300);
+                } */
+            });
+        }
+
+        // --- LOGICA DE IA FRONTEND (SHIPPING WEIGHT USA LBS) ---
+        const PACKAGING_LBS = 1.5; // Caja + relleno siempre se suma
+        function guessIA(title) {
+            const t = title.toLowerCase();
+            let cat = "Lifestyle & Street";
+            let productWeight = 2.0; // Peso base del producto solo
+
+            if (t.match(/laptop|macbook|computer|ssd|cpu|gpu|monitor|keyboard|mouse|headset|gaming|tech/)) {
+                cat = "Electrónica Premium";
+                if (t.includes('laptop')) productWeight = 5.0;
+                else if (t.includes('monitor')) {
+                    if (t.includes('27')) productWeight = 15.5;
+                    else productWeight = 11.5;
+                }
+                else if (t.includes('tablet') || t.includes('ipad')) productWeight = 1.5;
+                else productWeight = 2.5;
+            } else if (t.match(/watch|reloj|smartwatch|apple watch|galaxy watch|casio|invicta/)) {
+                cat = "Relojes & Wearables";
+                productWeight = 0.5;
+            } else {
+                if (t.match(/shoe|sneaker|tenis|nike|adidas/)) productWeight = 3.5;
+                else if (t.includes('iphone') || t.includes('phone')) productWeight = 0.5;
+                else if (t.includes('perfume')) productWeight = 0.7;
+            }
+            const weight = productWeight + PACKAGING_LBS; // Siempre suma caja
+            return { cat, weight };
+        }
+
+        async function applyIA(id) {
+            const currentTitle = document.getElementById(`title-${id}`).value;
+            const currentSpecs = document.getElementById(`specs-${id}`).value;
+            const res = guessIA(currentTitle);
+
+            const catEl = document.getElementById(`cat-${id}`);
+            if (catEl) catEl.value = res.cat;
+            document.getElementById(`weight-${id}`).value = res.weight;
+
+            // IMPORTANTE: Actualizar cálculos inmediatamente
+            updateRow(id);
+
+            // 2. Sugerencia Remota (Título Optimizado usando Specs)
+            try {
+                const response = await axios.post(API_URL + '/admin/express/optimize-title', { 
+                    title: currentTitle,
+                    specs: currentSpecs
+                }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                if (response.data.success) {
+                    document.getElementById(`title-${id}`).value = response.data.optimized;
+                }
+            } catch (e) { console.warn("Falló optimización de título IA"); }
+        }
+
+        async function optimizeAll(id) {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-wand-sparkles fa-spin"></i> Analizando...';
+            btn.disabled = true;
+
+            const currentTitle = document.getElementById(`title-${id}`).value;
+            const currentSpecs = document.getElementById(`specs-${id}`).value;
+
+            try {
+                const response = await axios.post(API_URL + '/admin/express/optimize-all', { 
+                    title: currentTitle,
+                    specs: currentSpecs 
+                }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                if (response.data.success) {
+                    const { content, structuredSpecs } = response.data;
+                    
+                    // 1. Actualizar Título y Specs
+                    if (content.title) document.getElementById(`title-${id}`).value = content.title;
+                    if (content.specs) document.getElementById(`specs-${id}`).value = content.specs;
+
+                    // 2. Guardar JSON estructurado
+                    if (structuredSpecs) {
+                        document.getElementById(`structured-specs-${id}`).value = JSON.stringify(structuredSpecs);
+                        
+                        // 3. Mostrar Preview Visual
+                        const preview = document.getElementById(`tech-preview-${id}`);
+                        preview.classList.remove('d-none');
+                        preview.innerHTML = `
+                            <div class="fw-bold text-primary border-bottom mb-1 pb-1">✅ FICHA TÉCNICA EXTRAÍDA:</div>
+                            <div class="row g-1" style="font-size: 0.6rem;">
+                                <div class="col-6">💻 CPU: ${structuredSpecs.processor || '?'}</div>
+                                <div class="col-6">⚡ RAM: ${structuredSpecs.ram || '?'}</div>
+                                <div class="col-6">💾 Disco: ${structuredSpecs.disk || '?'}</div>
+                                <div class="col-6">🖥️ Pantalla: ${structuredSpecs.screen || '?'}</div>
+                            </div>
+                        `;
+                    }
+
+                    // 4. Adivinar peso si es 0
+                    const weightInput = document.getElementById(`weight-${id}`);
+                    if (weightInput && (!weightInput.value || weightInput.value == "0")) {
+                        let w = 1.0;
+                        const t = (content.title || currentTitle).toLowerCase();
+                        if (t.includes('laptop') || t.includes('macbook')) w = 6;
+                        if (t.includes('iphone') || t.includes('phone') || t.includes('watch')) w = 1.5;
+                        if (t.includes('monitor')) w = 15;
+                        weightInput.value = w;
+                    }
+
+                    updateRow(id);
+                    alert("✨ Datos técnicos extraídos con éxito.");
+                }
+            } catch (e) { 
+                console.error(e);
+                alert("❌ Error en el motor de IA.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function normalizeCOP(val) {
+            if (!val) return null;
+            const clean = val.toString().replace(/[^0-9]/g, '');
+            return clean ? parseInt(clean) : null;
+        }
+
+        async function saveChanges(id) {
+            const priceInput = document.getElementById(`price-${id}`).value.replace(',', '.');
+            const weightInput = document.getElementById(`weight-${id}`).value.replace(',', '.');
+            const title = document.getElementById(`title-${id}`).value;
+            const image = document.getElementById(`img-${id}`)?.value || '';
+            const categoria = document.getElementById(`cat-${id}`)?.value || 'Lifestyle & Street';
+
+            // Coleccionar Galería
+            const galleryInputs = document.querySelectorAll(`.gallery-input-${id}`);
+            const gallery = Array.from(galleryInputs).map(input => input.value).filter(val => val !== '');
+
+            const customDolar = parseFloat(document.getElementById(`custom-dolar-${id}`).value) || 0;
+            const customProfit = parseFloat(document.getElementById(`custom-profit-${id}`).value) || 0;
+
+            const p = parseFloat(priceInput) || 0;
+            const w = parseFloat(weightInput) || 0;
+            const calc = calculateFinal(p, w, customDolar, customProfit);
+
+            // VALIDACIONES CRÍTICAS (FRONTEND)
+            if (p <= 0) {
+                alert("❌ ERROR: Precio USD inválido. Debe ser mayor a 0 para continuar.");
+                return;
+            }
+            if (w <= 0) { alert("⚠️ El peso debe ser mayor a 0 (Usa punto o coma para decimales)"); return; }
+
+            try {
+                const originalSpecs = document.getElementById(`specs-${id}`).value || '';
+                const structuredSpecs = document.getElementById(`structured-specs-${id}`).value || null;
+
+                const response = await axios.post(API_URL + '/admin/express/update', {
+                    id,
+                    title,
+                    price_offer: p,
+                    weight: w,
+                    price_cop: calc.finalCOP,
+                    categoria,
+                    image,
+                    gallery: JSON.stringify(gallery),
+                    custom_dolar: customDolar,
+                    custom_profit_percent: customProfit,
+                    original_specs: originalSpecs,
+                    structured_specs: structuredSpecs,
+                    // Nuevos campos
+                    selling_title: document.getElementById(`selling-title-${id}`).value,
+                    original_price: document.getElementById(`original-price-${id}`).value,
+                    savings: document.getElementById(`savings-${id}`).value,
+                    benefits: document.getElementById(`benefits-${id}`).value.split('\n').filter(b => b.trim() !== ''),
+                    badge: document.getElementById(`badge-${id}`).value,
+                    marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value)
+                }, { headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' } });
+
+                if (response.data.success) {
+                    alert("✅ Guardado correctamente.");
+                    loadData();
+                } else {
+                    alert("⚠️ " + (response.data.error || "Error al guardar"));
+                }
+            } catch (e) {
+                const msg = e.response?.data?.error || "Error de conexión al guardar";
+                alert("❌ ERROR: " + msg);
+            }
+        }
+
+        function searchMarket(title) {
+            const query = encodeURIComponent(`${title} precio Colombia`);
+            window.open(`https://www.google.com/search?q=${query}`, '_blank');
+        }
+
+        async function toggleStatus(id, activate) {
+            const priceVal = document.getElementById(`price-${id}`)?.value.replace(',', '.') || "0";
+            const weightVal = document.getElementById(`weight-${id}`)?.value.replace(',', '.') || "0";
+            const image = document.getElementById(`img-${id}`)?.value || '';
+
+            // Coleccionar Galería
+            const galleryInputs = document.querySelectorAll(`.gallery-input-${id}`);
+            const gallery = Array.from(galleryInputs).map(input => input.value).filter(val => val !== '');
+
+            const customDolar = parseFloat(document.getElementById(`custom-dolar-${id}`).value) || 0;
+            const customProfit = parseFloat(document.getElementById(`custom-profit-${id}`).value) || 0;
+
+            const p = parseFloat(priceVal) || 0;
+            const w = parseFloat(weightVal) || 0;
+            const title = document.getElementById(`title-${id}`)?.value;
+            const categoria = document.getElementById(`cat-${id}`)?.value || 'Lifestyle & Street';
+            const calc = calculateFinal(p, w, customDolar, customProfit);
+
+            if (activate && (p <= 0 || w <= 0 || !title || !image)) {
+                alert("⚠️ Para aprobar necesitas: Precio USD inválido (debe ser > 0), Título, Peso > 0 e Imagen.");
+                return;
+            }
+
+            try {
+                if (activate) {
+                    const originalSpecs = document.getElementById(`specs-${id}`).value || '';
+                    const structuredSpecs = document.getElementById(`structured-specs-${id}`).value || null;
+                    
+                    // --- GENERACIÓN AUTOMÁTICA DE DATOS DE VENTA (SOLO AL PUBLICAR) ---
+                    // Si los campos están vacíos, los generamos automáticamente antes de enviar
+                    let sTitle = document.getElementById(`selling-title-${id}`).value;
+                    let oPrice = document.getElementById(`original-price-${id}`).value;
+                    let savings = document.getElementById(`savings-${id}`).value;
+                    let benefitsText = document.getElementById(`benefits-${id}`).value;
+                    let badge = document.getElementById(`badge-${id}`).value;
+
+                    if (!sTitle || !oPrice || !savings) {
+                        console.log("[AUTO-PUBLISH] Generando datos de venta faltantes...");
+                        const autoData = generateSellingData(id);
+                        sTitle = sTitle || autoData.sellingTitle;
+                        oPrice = oPrice || autoData.originalPrice;
+                        savings = savings || autoData.savings;
+                        benefitsText = benefitsText || autoData.benefits.join('\n');
+                        badge = badge || autoData.badge;
+                    }
+
+                    await axios.post(API_URL + '/admin/express/approve', {
+                        id,
+                        title,
+                        price_offer: p,
+                        weight: w,
+                        price_cop: calc.finalCOP,
+                        categoria,
+                        image,
+                        gallery: JSON.stringify(gallery),
+                        custom_dolar: customDolar,
+                        custom_profit_percent: customProfit,
+                        original_specs: originalSpecs,
+                        structured_specs: structuredSpecs,
+                        // Datos de venta (Generados o manuales)
+                        selling_title: sTitle,
+                        original_price: oPrice,
+                        savings: savings,
+                        benefits: benefitsText.split('\n').filter(b => b.trim() !== ''),
+                        badge: badge,
+                        marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value)
+                    }, { headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' } });
+                } else {
+                    await axios.post(API_URL + '/admin/express/finalize', { id }, {
+                        headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                    });
+                }
+                loadData();
+            } catch (e) {
+                const msg = e.response?.data?.error || "Error al actualizar estado";
+                alert("❌ ERROR: " + msg);
+            }
+        }
+
+        /**
+         * 🤖 PRE-LLENADO SILENCIOSO DE MARKETING
+         * Se ejecuta al cargar o procesar, sin sobrescribir lo existente.
+         */
+        function preFillMarketingData(id) {
+            const priceUSD = parseFloat(document.getElementById(`price-${id}`)?.value) || 0;
+            const weightLbs = parseFloat(document.getElementById(`weight-${id}`)?.value) || 0;
+            const customDolar = parseFloat(document.getElementById(`custom-dolar-${id}`)?.value) || 0;
+            const customProfit = parseFloat(document.getElementById(`custom-profit-${id}`)?.value) || 0;
+            
+            // Calculamos el precio final en COP para comparar
+            const calc = calculateFinal(priceUSD, weightLbs, customDolar, customProfit);
+            const finalPriceCOP = calc.finalCOP;
+
+            const originalPriceEl = document.getElementById(`original-price-${id}`);
+            const savingsEl = document.getElementById(`savings-${id}`);
+            const benefitsEl = document.getElementById(`benefits-${id}`);
+            const specsStr = document.getElementById(`structured-specs-${id}`)?.value || '{}';
+            let specs = {};
+            try { specs = JSON.parse(specsStr); } catch(e) {}
+
+            if (priceUSD > 0) {
+                // 🚀 INTEGRACIÓN PRECIO DE MERCADO (Google Colombia)
+                // Prioridad 1: Precio Alto Confiable del mercado (p75)
+                // Prioridad 2: Precio Mediano del mercado
+                const refPriceCOP = specs.marketHighCOP || specs.marketMedianCOP || specs.marketPriceCOP || null;
+
+                if (refPriceCOP && refPriceCOP > finalPriceCOP) {
+                    const trm = customDolar || parseFloat(document.getElementById('globalDolarOp').value) || 4000;
+                    
+                    // 1. Precio Original basado en Referencia de Mercado (convertido a USD para el input)
+                    if (!originalPriceEl.value || parseFloat(originalPriceEl.value) === 0) {
+                        originalPriceEl.value = (refPriceCOP / trm).toFixed(2);
+                    }
+                    // 2. Ahorro Real (%)
+                    if (!savingsEl.value) {
+                        const ahorro = refPriceCOP - finalPriceCOP;
+                        const ahorroPercent = Math.round((ahorro / refPriceCOP) * 100);
+                        savingsEl.value = ahorroPercent;
+                    }
+                } else {
+                    // --- FALLBACK (Margen fijo si no hay datos de mercado) ---
+                    if (!originalPriceEl.value || parseFloat(originalPriceEl.value) === 0) {
+                        originalPriceEl.value = (priceUSD * 1.28).toFixed(2);
+                    }
+                    if (!savingsEl.value) {
+                        savingsEl.value = 22;
+                    }
+                }
+            }
+
+            // 3. Beneficios basados en specs
+            if (!benefitsEl.value.trim()) {
+                const b = [];
+                const ram = parseInt(specs.ram) || 0;
+                if (ram >= 16) b.push(`${specs.ram} – multitarea fluida`);
+                if (specs.disk && specs.disk.toLowerCase().includes('ssd')) b.push("SSD rápido – arranque inmediato");
+                
+                b.push("Equipo 100% funcional");
+                b.push("Garantía 6 meses");
+                benefitsEl.value = b.join('\n');
+            }
+            
+            updateRow(id);
+        }
+
+        /**
+         * ✨ GENERADOR DE DATOS DE VENTA (MARKETING)
+         * Retorna un objeto con datos optimizados para venta.
+         */
+        function generateSellingData(id) {
+            const priceOffer = parseFloat(document.getElementById(`price-${id}`).value) || 0;
+            const title = document.getElementById(`title-${id}`).value;
+            const specsStr = document.getElementById(`structured-specs-${id}`).value;
+            let specs = {};
+            try { specs = JSON.parse(specsStr); } catch(e) {}
+
+            // 1. Cálculos de Precio
+            const originalPrice = (priceOffer * 1.25).toFixed(2);
+            const savingsPercent = 20;
+
+            // 2. Título de Venta
+            let sellingTitle = `¡SUPER PRECIO! ${title}`;
+            if (specs.cpu || specs.ram) {
+                const brand = title.split(' ')[0];
+                sellingTitle = `${brand} ${specs.cpu || ''} | ${specs.ram || ''} | ${specs.disk || ''} - ¡OFERTA LIMITADA!`;
+            }
+
+            // 3. Beneficios
+            const benefitsArr = [];
+            if (specs.ram) benefitsArr.push(`🚀 ${specs.ram} RAM – Multitarea ultra fluida`);
+            if (specs.disk) benefitsArr.push(`💾 ${specs.disk} – Almacenamiento de alta velocidad`);
+            if (specs.screen) benefitsArr.push(`📺 Pantalla ${specs.screen} – Nitidez increíble`);
+            if (specs.cpu) benefitsArr.push(`🧠 Procesador ${specs.cpu} – Potencia garantizada`);
+            benefitsArr.push("✅ Importado de USA - Entrega asegurada");
+            benefitsArr.push("🛡️ Garantía de funcionamiento y soporte");
+
+            // 4. Badge
+            let badge = "RECOMENDADO";
+            const ramVal = parseInt(specs.ram) || 0;
+            const diskVal = parseInt(specs.disk) || 0;
+            if (ramVal >= 16 || diskVal >= 512) badge = "GAMA ALTA 🚀";
+            if (priceOffer < 300) badge = "PRECIO BOMBA 💣";
+            if (title.toLowerCase().includes('apple') || title.toLowerCase().includes('macbook')) badge = "PREMIUM ✨";
+
+            return {
+                sellingTitle: sellingTitle.substring(0, 100),
+                originalPrice,
+                savings: savingsPercent,
+                benefits: benefitsArr.slice(0, 5),
+                badge
+            };
+        }
+
+        function autoFillSellingData(id) {
+            const data = generateSellingData(id);
+            if (!data) return;
+
+            document.getElementById(`selling-title-${id}`).value = data.sellingTitle;
+            document.getElementById(`original-price-${id}`).value = data.originalPrice;
+            document.getElementById(`savings-${id}`).value = data.savings;
+            document.getElementById(`badge-${id}`).value = data.badge;
+            document.getElementById(`benefits-${id}`).value = data.benefits.join('\n');
+
+            const section = document.getElementById(`selling-title-${id}`).closest('.shadow-sm');
+            section.style.background = "#fffbeb";
+            setTimeout(() => section.style.background = "#fff", 800);
+            updateRow(id);
+        }
+
+        async function applyIA(id) {
+            const btn = document.querySelector(`button[onclick="applyIA('${id}')"]`);
+            if (!btn) return;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MAGIA...';
+            btn.disabled = true;
+
+            const titleVal = document.getElementById(`title-${id}`).value;
+
+            try {
+                // Usar el nuevo endpoint avanzado
+                const response = await axios.post(API_URL + '/admin/express/optimize-all', { title: titleVal }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                if (response.data.success) {
+                    const content = response.data.content;
+
+                    // Actualizar Título
+                    const titleInput = document.getElementById(`title-${id}`);
+                    if (titleInput) titleInput.value = content.title;
+
+                    // Adivinar peso si es 0
+                    const weightInput = document.getElementById(`weight-${id}`);
+                    if (weightInput && (!weightInput.value || weightInput.value == "0")) {
+                        let w = 1;
+                        const t = content.title.toLowerCase();
+                        if (t.includes('laptop') || t.includes('portátil') || t.includes('consola')) w = 6;
+                        if (t.includes('monitor') || t.includes('tv') || t.includes('impresora')) w = 12;
+                        if (t.includes('reloj') || t.includes('watch') || t.includes('audífonos') || t.includes('mouse')) w = 0.5;
+                        weightInput.value = w;
+                    }
+
+                    // Recalcular UI
+                    updateRow(id);
+
+                    // Notificar generación extra
+                    alert(`✨ ¡IA MÁGICA COMPLETADA!\n\nTITULO: ${content.title}\n\nSPECS GENERADAS:\n${content.specs}\n\n(Estas especificaciones se han generado internamente para la descripción del producto).`);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error al conectar con la IA: " + (e.response?.data?.error || e.message));
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        // Rellena los campos de specs desde los datos directos de la API + regex sobre el texto
+        function autoFillSpecsFromAnalysis(id, apiData) {
+            // PASO 1: Extracción por regex desde el texto de specs + título (silenciosa)
+            autoExtractSpecs(id, true);
+
+            // PASO 2: Override con datos directos de la API (más precisos que regex)
+            // Solo se sobreescribe si la API devolvió un valor no vacío
+            const setIfValid = (fieldId, value) => {
+                if (value && value.trim() && value !== 'No detectado') {
+                    const el = document.getElementById(fieldId);
+                    if (el) el.value = value.trim();
+                }
+            };
+
+            setIfValid(`spec-cpu-${id}`,    apiData.processor || '');
+            setIfValid(`spec-ram-${id}`,    apiData.ram       || '');
+            setIfValid(`spec-disk-${id}`,   apiData.disk      || '');
+            setIfValid(`spec-screen-${id}`, apiData.screen    || '');
+
+            // Para velocidad de CPU, intentar extraerla del campo procesador si no vino separada
+            const cpuEl = document.getElementById(`spec-cpu-${id}`);
+            const speedEl = document.getElementById(`spec-speed-${id}`);
+            if (cpuEl && speedEl && !speedEl.value) {
+                const ghzMatch = cpuEl.value.match(/([\d.]+)\s*GHz/i);
+                if (ghzMatch) speedEl.value = ghzMatch[0];
+            }
+
+            updateRow(id);
+            // PASO 3: Pre-llenado de marketing silencioso
+            preFillMarketingData(id);
+            console.log(`[AUTO-SPECS] ✅ Specs y Marketing auto-rellenados para item ${id}`);
+        }
+
+        function autoExtractSpecs(id, silent = false) {
+            const specsEl = document.getElementById(`specs-${id}`);
+            const titleEl = document.getElementById(`title-${id}`);
+            const raw = (specsEl?.value || '') + ' ' + (titleEl?.value || '');
+            if (!raw.trim() && !silent) return alert("Pega primero la descripción original abajo para poder detectar datos.");
+
+            const cleanRaw = raw.replace(/\s+/g, ' ');
+
+            const specs = {
+                // Pantalla: busca pulgadas explícitas
+                screen: (
+                    cleanRaw.match(/(?:Screen Size|Tamaño de pantalla|Pantalla|Display Size):\s*([\d.]+\s*(?:inch|pulgadas|[""]|in|\'))/i)?.[1] ||
+                    cleanRaw.match(/(\d{2}(?:\.\d)?[""])/i)?.[1] ||
+                    cleanRaw.match(/(\d{2}(?:\.\d)?\s*inch)/i)?.[1] || ""
+                ).trim(),
+
+                // Procesador: para en pipe, coma o punto y coma
+                cpu: (
+                    cleanRaw.match(/(?:Processor|CPU|Procesador):\s*((?:Intel|AMD|Ryzen|Apple|Core)[^|.\n,;]{3,50})/i)?.[1]?.trim() ||
+                    cleanRaw.match(/(?:Intel|AMD|Ryzen|Core)\s*(?:Core\s*)?[i\d][^\s,|;]{1,20}/i)?.[0] || ""
+                ).split(/[|,;]/)[0].trim(),
+
+                // Velocidad CPU: busca GHz
+                speed: (
+                    cleanRaw.match(/(?:Speed|Velocidad|Clock|Processor Speed):\s*([\d.]+\s*GHz)/i)?.[1] ||
+                    cleanRaw.match(/([\d.]+\s*GHz)/i)?.[1] || ""
+                ).trim(),
+
+                // RAM: captura solo el número + GB/TB, para en pipe
+                ram: (
+                    cleanRaw.match(/(?:RAM Size|RAM|Memory|Memoria):\s*([^|.\n,;]{3,20})/i)?.[1] ||
+                    cleanRaw.match(/(\d+\s*GB\s*(?:DDR\d|LPDDR\d|RAM|Memory))/i)?.[1] ||
+                    cleanRaw.match(/\b(4|8|12|16|24|32|64)\s*GB\b/i)?.[0] || ""
+                ).split(/[|,;]/)[0].trim(),
+
+                // Disco: busca SSD Capacity / Storage primero, para en pipe
+                disk: (
+                    cleanRaw.match(/(?:SSD Capacity|SSD Size|Storage Capacity|Storage|Hard Drive Capacity|Disco|Capacidad SSD):\s*([^|.\n,;]{3,30})/i)?.[1] ||
+                    cleanRaw.match(/(\d+\s*(?:GB|TB)\s*(?:SSD|NVMe|HDD|Drive))/i)?.[1] ||
+                    cleanRaw.match(/\b(128|256|512|1024|2048)\s*GB\b/i)?.[0] || ""
+                ).split(/[|,;]/)[0].trim(),
+                
+                cam: (cleanRaw.toLowerCase().includes('cam') || cleanRaw.toLowerCase().includes('webcam') || cleanRaw.toLowerCase().includes('cámara')) ? "Integrada HD" : "",
+                ports: []
+            };
+
+
+            if (cleanRaw.toLowerCase().includes('hdmi')) specs.ports.push('HDMI');
+            if (cleanRaw.toLowerCase().includes('usb-c') || cleanRaw.toLowerCase().includes('type-c')) specs.ports.push('USB-C');
+            if (cleanRaw.toLowerCase().includes('thunderbolt')) specs.ports.push('Thunderbolt');
+            if (cleanRaw.toLowerCase().includes('lan') || cleanRaw.toLowerCase().includes('ethernet')) specs.ports.push('LAN');
+            if (cleanRaw.toLowerCase().includes('vga')) specs.ports.push('VGA');
+            if (cleanRaw.toLowerCase().includes('usb 3') || cleanRaw.toLowerCase().includes('usb3')) specs.ports.push('USB 3.0');
+            specs.ports = specs.ports.join(', ');
+
+            if (specs.screen) document.getElementById(`spec-screen-${id}`).value = specs.screen;
+            if (specs.cpu)    document.getElementById(`spec-cpu-${id}`).value    = specs.cpu;
+            if (specs.speed)  document.getElementById(`spec-speed-${id}`).value  = specs.speed;
+            if (specs.ram)    document.getElementById(`spec-ram-${id}`).value    = specs.ram;
+            if (specs.disk)   document.getElementById(`spec-disk-${id}`).value   = specs.disk;
+            if (specs.cam)    document.getElementById(`spec-cam-${id}`).value    = specs.cam;
+            if (specs.ports)  document.getElementById(`spec-ports-${id}`).value  = specs.ports;
+
+            updateRow(id);
+            if (!silent) alert("✅ Detección multilingüe completada.");
+        }
+
+        function updateRow(id) {
+            const pInput = document.getElementById(`price-${id}`).value.replace(',', '.');
+            const wInput = document.getElementById(`weight-${id}`).value.replace(',', '.');
+            const imgInput = document.getElementById(`img-${id}`).value;
+
+            const p = parseFloat(pInput) || 0;
+            const w = parseFloat(wInput) || 0;
+
+            // Alerta visual de precio obligatorio
+            const warn = document.getElementById(`price-warning-${id}`);
+            if (warn) {
+                if (p <= 0) warn.classList.remove('d-none');
+                else warn.classList.add('d-none');
+            }
+
+            const customDolar = parseFloat(document.getElementById(`custom-dolar-${id}`).value) || 0;
+            const customProfit = parseFloat(document.getElementById(`custom-profit-${id}`).value) || 0;
+
+            const calc = calculateFinal(p, w, customDolar, customProfit);
+
+            // ACTUALIZACIÓN DE UI SEGÚN VALIDEZ
+            const copDisplay = document.getElementById(`cop-${id}`);
+            const totalUSDDisplay = document.getElementById(`total-val-${id}`);
+            const btnApprove = document.querySelector(`button[onclick="toggleStatus('${id}', true)"]`);
+
+            if (!calc) {
+                if (copDisplay) copDisplay.innerHTML = '<span class="text-danger" style="font-size: 1.5rem; font-weight: 800;"><i class="fa-solid fa-triangle-exclamation"></i> PRECIO USD <br>REQUERIDO</span>';
+                if (totalUSDDisplay) totalUSDDisplay.innerText = "INVALIDO";
+                if (btnApprove) btnApprove.disabled = true;
+
+                // Limpiar desglose si es inválido
+                const profitEl = document.getElementById(`profit-val-${id}`);
+                const taxEl = document.getElementById(`tax-val-${id}`);
+                const shipEl = document.getElementById(`ship-val-${id}`);
+                if (profitEl) profitEl.innerText = "-";
+                if (taxEl) taxEl.innerText = "-";
+                if (shipEl) shipEl.innerText = "-";
+                return;
+            }
+
+            if (btnApprove) btnApprove.disabled = false;
+
+            // Actualizar preview de imagen principal
+            const preview = document.getElementById(`preview-box-${id}`);
+            if (preview && imgInput) {
+                preview.innerHTML = `<img src="/api/proxy-image?url=${encodeURIComponent(imgInput)}">`;
+            }
+
+            document.getElementById(`cop-${id}`).innerText = `$ ${new Intl.NumberFormat('es-CO').format(calc.finalCOP)}`;
+            document.getElementById(`base-val-${id}`).innerText = `$${p.toFixed(2)} USD`;
+            document.getElementById(`profit-val-${id}`).innerText = `+$${calc.profitVal.toFixed(2)} USD`;
+            document.getElementById(`tax-val-${id}`).innerText = `+$${calc.taxUSD.toFixed(2)} USD`;
+            document.getElementById(`ship-val-${id}`).innerText = `+$${calc.shipUSD.toFixed(2)} USD`;
+            document.getElementById(`total-val-${id}`).innerText = `$${calc.totalUSD.toFixed(2)} USD`;
+
+            // ACTUALIZAR SPECS ESTRUCTURADAS
+            const specsObj = {
+                screen: document.getElementById(`spec-screen-${id}`).value,
+                cpu: document.getElementById(`spec-cpu-${id}`).value,
+                speed: document.getElementById(`spec-speed-${id}`).value,
+                ram: document.getElementById(`spec-ram-${id}`).value,
+                disk: document.getElementById(`spec-disk-${id}`).value,
+                cam: document.getElementById(`spec-cam-${id}`).value,
+                ports: document.getElementById(`spec-ports-${id}`).value
+            };
+            document.getElementById(`structured-specs-${id}`).value = JSON.stringify(specsObj);
+
+            // Actualizar etiquetas de porcentaje dinámicamente
+            const pLabel = document.getElementById(`label-profit-${id}`);
+            const tLabel = document.getElementById(`label-tax-${id}`);
+            if (pLabel) pLabel.innerText = `Ganancia (${(calc.profitPercent * 100).toFixed(0)}%):`;
+            if (tLabel) tLabel.innerText = `Tax USA (${(calc.taxPercent * 100).toFixed(0)}%):`;
+        }
+
+        function updateGalleryPreview(itemId, index) {
+            const inputs = document.querySelectorAll(`.gallery-input-${itemId}`);
+            const val = inputs[index].value;
+            const img = document.getElementById(`gal-prev-${itemId}-${index}`);
+            if (img) {
+                img.src = val ? '/api/proxy-image?url=' + encodeURIComponent(val) : 'https://placehold.co/100?text=+';
+            }
+        }
+
+
+
+        function copyToWA(id) {
+            const titleEl = document.getElementById(`title-${id}`);
+            const copEl = document.getElementById(`cop-${id}`);
+            const priceEl = document.getElementById(`price-${id}`);
+
+            const title = titleEl ? titleEl.value.trim() : '';
+            const cop = copEl ? copEl.innerText.trim() : '';
+            const priceUSD = priceEl ? parseFloat(priceEl.value) || 0 : 0;
+
+            if (!title) { alert('⚠️ Debes ingresar el TÍTULO del producto antes de copiar para WhatsApp.'); return; }
+            if (priceUSD <= 0 || !cop || cop.includes('REQUERIDO')) { alert('⚠️ Debes ingresar el PRECIO USD válido antes de copiar para WhatsApp.'); return; }
+
+            const origin = window.location.origin;
+            const link = `${origin}/go/${id}`;
+
+            // Técnica Ninja: saltos de línea para ocultar el link pero dejar previsualización
+            const invisibleSeparator = "\n\u200B".repeat(15);
+
+            const text = `\uD83D\uDD25 *OFERTA EXCLUSIVA - MASBARATO EXPRESS* \uD83C\uDDE8\uD83C\uDDF4\n\n` +
+                `\uD83D\uDCE6 *Producto:* ${title}\n` +
+                `\uD83D\uDCB0 *Precio Final:* ${cop}\n\n` +
+                `\u2705 *TODO INCLUIDO:* Impuestos + Envío Internacional.\n` +
+                `\uD83D\uDE80 *ENTREGA:* 12-15 días en tu puerta.\n\n` +
+                `\uD83D\uDCB3 *FORMAS DE PAGO:*\n` +
+                `• Ahorro Bancolombia (Sin recargo).\n` +
+                `• PayPal o MercadoPago (+10% adicional).\n\n` +
+                `\uD83D\uDD12 _Compra segura y sin sorpresas._` +
+                `${invisibleSeparator}${link}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert("📋 ¡Texto listo para pegar en WhatsApp!");
+            }).catch(err => {
+                // Fallback para navegadores sin permiso de clipboard
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert("📋 ¡Texto copiado! Pégalo en WhatsApp.");
+            });
+        }
+
+        async function archiveItem(id) {
+            if (!confirm("¿Seguro que deseas archivar esta oferta? (Se moverá al historial)")) return;
+            try {
+                await axios.post(API_URL + '/admin/express/archive', { id }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                loadData();
+            } catch (e) { alert("Error al archivar"); }
+        }
+
+        async function removeItem(id) {
+            const confirm1 = confirm("⚠️ ¿BORRAR DEFINITIVAMENTE?\n\nEsta acción eliminará la oferta de la base de datos para siempre. NO se podrá recuperar.");
+            if (!confirm1) return;
+
+            try {
+                await axios.post(API_URL + '/admin/express/delete', { id }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                // Animación de salida
+                const el = document.getElementById(`card-${id}`);
+                if (el) {
+                    el.style.transition = "all 0.5s ease";
+                    el.style.opacity = '0';
+                    el.style.transform = "translateX(50px)";
+                    setTimeout(() => el.remove(), 500);
+                } else {
+                    loadData();
+                }
+            } catch (e) {
+                alert("Error al eliminar: " + (e.response?.data?.error || e.message));
+            }
+        }
+
+        async function searchGoogle(id) {
+            const titleInput = document.getElementById(`title-${id}`);
+            if (!titleInput || !titleInput.value.trim()) {
+                alert("⚠️ Primero ingresa un título para buscar.");
+                return;
+            }
+            const title = titleInput.value.trim();
+            const valEl = document.getElementById(`google-price-val-${id}`);
+            if (valEl) valEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+            
+            await loadGooglePrice(id, title);
+        }
+
+        async function loadGooglePrice(id, title) {
+            const valEl = document.getElementById(`google-price-val-${id}`);
+            const rangeEl = document.getElementById(`google-price-range-${id}`);
+            if (!valEl || !title) return;
+            try {
+                // Pasamos el ID para que el backend guarde la referencia en DB
+                const res = await axios.post(API_URL + '/admin/express/google-price', { title, id }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                if (res.data.success) {
+                    const fmt = (v) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+                    valEl.innerHTML = `
+                        <div class="d-flex flex-column">
+                            <span style="color:#1a73e8; font-size:1.1rem; font-weight:900;">${fmt(res.data.avg)} <small style="font-size:0.6rem; color:#64748b;">(Promedio)</small></span>
+                            <span style="color:#6b21a8; font-size:0.8rem; font-weight:700;">${fmt(res.data.p75)} <small style="font-size:0.55rem; color:#94a3b8;">(Alto Confiable)</small></span>
+                        </div>
+                    `;
+                    rangeEl.innerHTML = `Rango: ${fmt(res.data.min)} – ${fmt(res.data.max)} | ${res.data.count} fuentes`;
+                } else {
+                    valEl.innerHTML = `<a href="${res.data.searchUrl}" target="_blank" class="small text-primary fw-bold">Ver en Google ↗</a>`;
+                    rangeEl.innerHTML = res.data.message || '';
+                }
+            } catch(e) {
+                valEl.innerHTML = `<span class="text-muted small">No disponible</span>`;
+            }
+        }
+
+        async function fetchTRM() {
+            try {
+                const res = await axios.get(API_URL + '/express/trm');
+                if (res.data.success) {
+                    const trm = Math.round(res.data.trm);
+                    const markup = parseInt(document.getElementById('globalTrmMarkup').value) || 300;
+                    const trmOp = Math.ceil((trm + markup) / 10) * 10;
+
+                    const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+                    // ✅ SOLO actualiza el display informativo (header), NUNCA el input del usuario
+                    document.getElementById('trm-real').innerText = fmt.format(trm);
+                    document.getElementById('trm-op').innerText = fmt.format(trmOp);
+                    document.getElementById('trm-time').innerText = res.data.updated_at || 'Recientemente';
+
+                    // ✅ Solo tocar globalDolarOp si el usuario NUNCA ha guardado un valor propio
+                    const userHasCustomDolar = localStorage.getItem('express_dolar_personalizado') === '1';
+                    const inputDolar = document.getElementById('globalDolarOp');
+                    if (!userHasCustomDolar) {
+                        inputDolar.value = trmOp;
+                        saveConfig();
+                    }
+                    // Si ya tiene valor personalizado, no tocar nada
+                }
+            } catch (e) { console.error("Error TRM:", e); }
+        }
+
+        function refreshView() { loadData(); }
+
+        async function runManualScan() {
+            try {
+                const res = await axios.post(API_URL + '/admin/scan-now', {}, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                if (res.data.success) {
+                    alert("🚀 ESCANEO INICIADO: El bot está buscando ofertas en este momento. Revisa la pestaña de PENDIENTES en un minuto.");
+                }
+            } catch (e) {
+                alert("❌ Error al iniciar escaneo: " + (e.response?.data?.error || e.message));
+            }
+        }
+
+        async function runHealthCheck() {
+            const container = document.getElementById('health-check-results');
+            const details = document.getElementById('health-details');
+            container.classList.remove('d-none');
+            details.innerHTML = '<div class="col-12 text-center py-2"><i class="fa-solid fa-spinner fa-spin me-2"></i> Analizando sistema...</div>';
+
+            try {
+                const res = await axios.get(API_URL + '/admin/diagnostics', {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                const d = res.data;
+
+                let html = `
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <div class="xsmall fw-bold text-muted">BASE DE DATOS</div>
+                            <div class="fw-bold ${d.database.status === 'OK' ? 'text-success' : 'text-danger'}">
+                                ${d.database.status === 'OK' ? '<i class="fa-solid fa-check-circle me-1"></i> Operativa' : '<i class="fa-solid fa-circle-xmark me-1"></i> ERROR'}
+                            </div>
+                            <div style="font-size: 0.6rem;">${d.database.details}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <div class="xsmall fw-bold text-muted">INTELIGENCIA ARTIFICIAL (IA)</div>
+                            <div class="fw-bold ${d.env.OPENAI_API_KEY.includes('✅') || d.env.DEEPSEEK_KEY ? 'text-success' : 'text-warning'}">
+                                ${d.env.DEEPSEEK_KEY ? 'DEEPSEEK V3 🚀' : d.env.OPENAI_API_KEY}
+                            </div>
+                            <div style="font-size: 0.6rem;">Optimización de títulos, descripciones y pesos.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <div class="xsmall fw-bold text-muted">RENDIMIENTO & UPTIME</div>
+                            <div class="fw-bold text-primary"><i class="fa-solid fa-clock me-1"></i> ${Math.floor(d.system.uptime / 3600)}h ${Math.floor((d.system.uptime % 3600) / 60)}m activa</div>
+                            <div style="font-size: 0.6rem;">Plataforma: ${d.system.platform}</div>
+                        </div>
+                    </div>
+                `;
+                details.innerHTML = html;
+            } catch (e) {
+                details.innerHTML = `<div class="col-12 text-danger fw-bold p-2">Error al obtener diagnóstico: ${e.message}</div>`;
+            }
+        }
+
+        function init() {
+            loadConfig();
+            fetchTRM();
+            loadData();
+            // 🔄 Auto-actualizar TRM cada 60 segundos
+            setInterval(fetchTRM, 60 * 1000);
+        }
+
+        // Inicializar
+        init();
+    </script>
+</body>
+
+</html>

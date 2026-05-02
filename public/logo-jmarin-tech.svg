@@ -1,0 +1,78 @@
+<svg width="600" height="700" viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Acabado Metálico Corporativo -->
+    <linearGradient id="steel-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F3F4F6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#9CA3AF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D1D5DB;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Iluminación Azul Holding -->
+    <linearGradient id="holding-blue" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#1E3A8A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Filtro de Sombra Profunda y Realismo -->
+    <filter id="deep-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
+      <feOffset dx="4" dy="6" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.6" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- fondo -->
+  <rect width="600" height="700" fill="#0B1F3A"/>
+
+  <!-- rombo (Estructura Intacta - Acabado Acero) -->
+  <polygon points="300,120 500,320 300,520 100,320"
+           fill="none" stroke="url(#steel-silver)" stroke-width="8" filter="url(#deep-shadow)"/>
+
+  <!-- JM Geométrico (Sin Curvas - Simetría de Poder) -->
+  <g filter="url(#deep-shadow)">
+    <!-- J (Recta, Sólida, 90°) -->
+    <path d="M250 220 L250 410 L310 410"
+          stroke="url(#steel-silver)" stroke-width="22" fill="none"
+          stroke-linejoin="miter"/>
+    <!-- M (Sólida, Alineación Perfecta) -->
+    <path d="M310 410 L310 220 L350 300 L390 220 L390 410"
+          stroke="url(#steel-silver)" stroke-width="22" fill="none"
+          stroke-linejoin="miter"/>
+  </g>
+
+  <!-- detalle azul superior (Iluminación Holding) -->
+  <polygon points="260,140 300,95 340,140"
+           fill="url(#holding-blue)"/>
+
+  <!-- texto JMARIN (Compacto, Tracking Reducido) -->
+  <text x="300" y="605"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="48"
+        font-weight="900"
+        fill="#FFFFFF"
+        letter-spacing="0.5">
+    JMARIN
+  </text>
+
+  <!-- línea azul (Ancho exacto JMARIN) -->
+  <rect x="195" y="625" width="210" height="5" fill="#2563EB"/>
+
+  <!-- TECH (Solo TECH) -->
+  <text x="300" y="670"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="26"
+        font-weight="700"
+        fill="#2563EB"
+        letter-spacing="8">
+    TECH
+  </text>
+
+</svg>

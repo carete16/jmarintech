@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & Ops | Masbarato Deals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #000000;
+            --blue: #0070F3;
+            --success: #10B981;
+            --gray-subtle: #FAFAFA;
+            --border: #EAEAEA;
+            --text-main: #171717;
+            --text-secondary: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: white;
+            color: var(--text-main);
+            padding: 40px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Estilo Vercel */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+        }
+
+        .user-info h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--success);
+            background: #ECFDF5;
+            padding: 6px 12px;
+            border-radius: 100px;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        /* Main Content area */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+        }
+
+        .card {
+            background: white;
+        }
+
+        .card h2 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 0;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        td {
+            padding: 16px 0;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .deal-name {
+            font-weight: 600;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tag {
+            background: var(--gray-subtle);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn-live {
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+
+            .stats-grid,
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header style="background: #001d3d; padding: 20px; border-radius: 12px; color: white; margin-bottom: 40px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div
+                    style="background: #e63946; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; color: white;">
+                    +</div>
+                <div style="font-size: 18px; font-weight: 800; letter-spacing: -1px; text-transform: uppercase;">
+                    BARATO <span
+                        style="color: #e63946; display: block; font-size: 10px; letter-spacing: 2px; margin-top: 2px;">DEALS
+                        .NET
+                        ADMIN</span>
+                </div>
+            </div>
+            <div class="status-pill" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                <span class="pulse"></span> COMMAND CENTER ACTIVE
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Published Deals</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card" style="border-bottom: 4px solid var(--blue);">
+                <div class="stat-label">Total Clicks (CTR)</div>
+                <div class="stat-value" id="stat-clicks">0</div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid var(--success);">
+                <div class="stat-label">Estimated Yield (EPC)</div>
+                <div class="stat-value" id="stat-revenue">$0.00</div>
+            </div>
+        </div>
+
+        <div class="content-layout">
+            <div class="card">
+                <h2>Real-time Stream</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Retailer</th>
+                            <th>Clicks</th>
+                            <th>Activity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deals-table">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Conversion Analytics</h2>
+                <div style="height: 200px; display: flex; align-items: flex-end; gap: 8px; padding-bottom: 20px;">
+                    <div style="flex:1; background: #eee; height: 40%; border-radius: 4px;"></div>
+                    <div style="flex:1; background: #eee; height: 60%; border-radius: 4px;"></div>
+                    <div style="flex:1; background: #000; height: 90%; border-radius: 4px;"></div>
+                    <div style="flex:1; background: #eee; height: 50%; border-radius: 4px;"></div>
+                    <div style="flex:1; background: #eee; height: 30%; border-radius: 4px;"></div>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary);">El volumen de tráfico ha aumentado un
+                    <b>12%</b> respecto a ayer.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+
+                document.getElementById('stat-total').innerText = data.total_published;
+                document.getElementById('stat-clicks').innerText = data.total_clicks;
+                document.getElementById('stat-revenue').innerText = '$' + data.estimated_revenue;
+
+                const table = document.getElementById('deals-table');
+                table.innerHTML = data.recent_deals.map(deal => `
+                    <tr>
+                        <td>
+                            <div class="deal-name">${deal.title}</div>
+                        </td>
+                        <td><span class="tag">${deal.tienda || 'AMAZON'}</span></td>
+                        <td style="font-weight: 700; color: var(--blue); font-size: 16px;">
+                            ${deal.clicks || 0} <small style="font-size: 10px; color: #888;">clics</small>
+                        </td>
+                        <td><a href="/go/${deal.id}" target="_blank" class="btn-live">Test Link</a></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 10000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- SEO Meta Tags -->
+    <title>+BARATO DEALS | Las Mejores Ofertas de USA Verificadas</title>
+    <meta name="description"
+        content="🔥 Descubre descuentos verificados de hasta 90% en Amazon, eBay y Walmart. Rastreamos mínimos históricos en tiempo real para ti.">
+    <meta name="theme-color" content="#0f0f12">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    <style>
+        :root {
+            --bg-dark: #0f0f12;
+            --bg-card: #18181b;
+            --bg-card-hover: #202025;
+            --primary: #f87171;
+            /* Rojo suave premium */
+            --accent: #38bdf8;
+            /* Azul eléctrico */
+            --gold: #fbbf24;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- ORBS --- */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.2;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            bottom: 0;
+            right: -50px;
+        }
+
+        /* --- HEADER --- */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 15, 18, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-weight: 900;
+            font-size: 22px;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand span {
+            color: var(--primary);
+        }
+
+        .cta-telegram {
+            background: #229ED9;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .cta-telegram:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 158, 217, 0.4);
+        }
+
+        /* --- HERO --- */
+        .hero {
+            padding: 40px 5%;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 38px;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto 24px;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
+        }
+
+        /* --- FILTERS --- */
+        .filters {
+            display: flex;
+            gap: 10px;
+            padding: 10px 5%;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-chip.active {
+            background: white;
+            color: black;
+            border-color: white;
+        }
+
+        /* --- GRID --- */
+        .grid-container {
+            padding: 20px 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                /* Tarjetas grandes en móvil */
+                padding: 16px;
+                gap: 24px;
+            }
+        }
+
+        /* --- CARD --- */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Historic Low Style */
+        .card.historic {
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.1);
+        }
+
+        .historic-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: black;
+            font-weight: 800;
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: pulse-gold 2s infinite;
+        }
+
+        .img-wrapper {
+            background: white;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .img-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+        }
+
+        .discount-tag {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: var(--primary);
+            color: white;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
+        }
+
+        .card-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .store-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+            color: white;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .prices {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .price-now {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .price-old {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .buy-btn {
+            background: white;
+            color: black;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .buy-btn:hover {
+            transform: scale(1.02);
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Share Bar inside card */
+        .share-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .share-icon {
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .share-icon:hover {
+            color: white;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 40px 5%;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #0f0f12;
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header>
+        <a href="/" class="brand">
+            +BARATO <span>DEALS</span>
+        </a>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button onclick="openModal()" class="cta-telegram"
+                style="background: transparent; border: 1px solid var(--border); cursor: pointer;">
+                ➕ Subir
+            </button>
+            <a href="https://t.me/Masbarato_deals" target="_blank" class="cta-telegram">
+                🚀 Únete
+            </a>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1>Las Mejores Ofertas<br>Verificadas de USA</h1>
+        <p>Rastreamos Amazon, eBay y Walmart en tiempo real para encontrar errores de precio y liquidaciones.</p>
+        <div class="search-container">
+            <input type="text" id="search" class="search-input"
+                placeholder="🔍  Buscar (ej: iPhone, Laptop, Zapatillas)...">
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="filter-chip active" data-cat="all">Todas</button>
+        <button class="filter-chip" data-cat="Tecnología">Tecnología 💻</button>
+        <button class="filter-chip" data-cat="Gamer">Gamer 🎮</button>
+        <button class="filter-chip" data-cat="Moda">Moda 👟</button>
+        <button class="filter-chip" data-cat="Hogar">Hogar 🏠</button>
+    </div>
+
+    <div class="grid-container" id="grid">
+        <!-- Skeleton Loading State -->
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-muted);">
+            <div style="font-size: 30px; margin-bottom: 10px;">⚡</div>
+            Cargando ofertas...
+        </div>
+    </div>
+
+    <!-- Newsletter Widget -->
+    <div
+        style="margin: 0 5% 60px; background: var(--bg-card); border: 1px solid var(--border); padding: 30px; border-radius: 20px; text-align: center;">
+        <h3 style="margin-bottom: 10px;">📩 No te pierdas los errores de precio</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Te avisamos solo cuando encontramos
+            algo realmente épico.</p>
+        <form id="newsletter-form" style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+            <input type="email" id="email" placeholder="tu@email.com" required
+                style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #0f0f12; color: white;">
+            <button type="submit"
+                style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">SÍ
+                QUIERO</button>
+        </form>
+        <div id="msg" style="margin-top: 10px; font-size: 13px;"></div>
+    </div>
+
+    <!-- Submit Deal Modal (Professional Wizard) -->
+    <div id="submitModal" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <h2 style="font-size: 20px;">📢 Crear Nueva Oferta</h2>
+
+            <form id="submit-form">
+                <!-- STEP 1: URL -->
+                <div class="form-group">
+                    <label style="font-weight:bold; color:var(--accent);">Paso 1: Enlace de la Oferta</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="url" id="d-link" class="form-input" placeholder="https://amazon.com/..." required>
+                        <button type="button" id="btn-analyze" onclick="analyzeLink()"
+                            style="background:var(--bg-card-hover); border:1px solid var(--border); color:white; padding:0 15px; border-radius:10px; cursor:pointer;">
+                            🔍
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: DETAILS (Hidden initially) -->
+                <div id="step-2"
+                    style="display:none; border-top:1px solid var(--border); margin-top:20px; padding-top:20px;">
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        <!-- Image Preview -->
+                        <div
+                            style="width:100px; height:100px; background:#000; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--border);">
+                            <img id="d-img-preview" src=""
+                                style="width:100%; height:100%; object-fit:contain; display:none;">
+                            <span id="d-img-placeholder" style="font-size:30px;">📸</span>
+                        </div>
+
+                        <div style="flex:1;">
+                            <label>Título de la Oferta</label>
+                            <input type="text" id="d-title" class="form-input"
+                                placeholder="Ej: Samsung TV 55 Pulgadas..." required>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Precio Oferta ($)</label>
+                            <input type="number" id="d-price" class="form-input" step="0.01" placeholder="99.99"
+                                required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Precio Lista ($)</label>
+                            <input type="number" id="d-official" class="form-input" step="0.01" placeholder="199.99">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="d-cat" class="form-input">
+                            <option value="Tecnología">Tecnología 💻</option>
+                            <option value="Hogar">Hogar 🏠</option>
+                            <option value="Moda">Moda 👟</option>
+                            <option value="Gamer">Gamer 🎮</option>
+                            <option value="Otros">Otros 📦</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Instrucciones / Cupón (Opcional)</label>
+                        <textarea id="d-desc" class="form-input" placeholder="Ej: Usa el código: SAVE20 al pagar..."
+                            style="height:60px; resize:none;"></textarea>
+                    </div>
+
+                    <input type="hidden" id="d-img-url"> <!-- Hidden field for image URL -->
+                    <input type="hidden" id="d-store"> <!-- Hidden field for store name -->
+
+                    <button type="submit" id="btn-submit"
+                        style="width:100%; background:var(--primary); color:white; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">
+                        PUBLICAR OFERTA 🚀
+                    </button>
+                </div>
+
+                <div id="d-msg" style="margin-top:15px; font-size:13px; text-align:center;"></div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p style="color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+            <b>Divulgación:</b> Somos participantes de programas de afiliados (Amazon, eBay, etc).
+            Al comprar a través de nuestros enlaces, ganamos una comisión sin costo extra para ti.
+            <br><br>
+            © 2026 +BARATO DEALS .NET
+        </p>
+    </footer>
+
+    <script>
+        let allDeals = [];
+        let editingDealId = null; // ID of deal currently being edited
+
+        const isAdmin = new URLSearchParams(window.location.search).get('admin') === '123';
+
+        async function init() {
+            try {
+                const res = await fetch('/api/deals');
+                allDeals = await res.json();
+                render(allDeals);
+                if (isAdmin) document.body.classList.add('admin-mode');
+            } catch (e) { console.error(e); }
+        }
+
+        function render(deals) {
+            const grid = document.getElementById('grid');
+            if (deals.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 50px;">No hay ofertas disponibles por ahora.</div>`;
+                return;
+            }
+
+            grid.innerHTML = deals.map(deal => {
+                const discount = deal.price_official > 0
+                    ? Math.round(((deal.price_official - deal.price_offer) / deal.price_official) * 100)
+                    : 0;
+
+                const displayTitle = deal.selling_title || deal.title;
+                const isHistoric = deal.is_historic_low || (deal.title && /lowest|all time low/i.test(deal.title));
+                let img = deal.image;
+                if ((!img || img.includes('default') || img.includes('self')) && (deal.tienda === 'Amazon' || deal.link?.includes('amazon'))) {
+                    const asinMatch = deal.link?.match(/\/([A-Z0-9]{10})(?:[/?]|$)/);
+                    if (asinMatch) img = `https://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&Format=_SL350_&ASIN=${asinMatch[1]}&MarketPlace=US`;
+                }
+                img = img || 'https://placehold.co/400x400/18181b/ffffff?text=Oferta+Top';
+
+                // Beneficios (parsear JSON si existe)
+                let benefits = [];
+                try {
+                    benefits = typeof deal.benefits === 'string' ? JSON.parse(deal.benefits) : (deal.benefits || []);
+                } catch(e) { benefits = []; }
+
+                // Share Links
+                const postUrl = window.location.origin + '/go/' + deal.id;
+                const txt = `🔥 ${displayTitle} ($${deal.price_offer})`;
+
+                const wa = `https://wa.me/?text=${encodeURIComponent(txt + ' ' + postUrl)}`;
+                const tg = `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(txt)}`;
+
+                // ADMIN CONTROLS
+                const adminControls = isAdmin ? `
+                    <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px; display:flex; gap:10px;">
+                        <button onclick="editDeal('${deal.id}')" style="flex:1; background:#3b82f6; border:none; color:white; border-radius:5px; cursor:pointer; padding:5px;">✏️ Editar</button>
+                        <button onclick="deleteDeal('${deal.id}')" style="flex:1; background:#ef4444; border:none; color:white; border-radius:5px; cursor:pointer; padding:5px;">🗑️ Borrar</button>
+                    </div>
+                ` : '';
+
+                return `
+                <article class="card ${isHistoric ? 'historic' : ''}">
+                    ${deal.badge ? `<div class="historic-badge" style="background:var(--primary); color:white;">🔥 ${deal.badge}</div>` : (isHistoric ? '<div class="historic-badge">🏆 RÉCORD HISTÓRICO</div>' : '')}
+                    
+                    <div class="img-wrapper">
+                        <img src="${img}" alt="${displayTitle}" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/400x400/18181b/ffffff?text=Oferta+Top';">
+                        ${deal.savings ? `<div class="discount-tag">-${deal.savings}%</div>` : (discount > 0 ? `<div class="discount-tag">-${discount}%</div>` : '')}
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-meta">
+                            <span class="store-tag">🛍️ ${deal.tienda || 'Tienda USA'}</span>
+                            <span>${getTimeAgo(deal.posted_at)}</span>
+                        </div>
+                        
+                        <h3 class="card-title">${displayTitle}</h3>
+                        
+                        <div class="prices">
+                            <span class="price-now">$${deal.price_offer}</span>
+                            ${deal.original_price ? `<span class="price-old">$${deal.original_price}</span>` : (deal.price_official > 0 ? `<span class="price-old">$${deal.price_official}</span>` : '')}
+                        </div>
+
+                        ${benefits.length > 0 ? `
+                        <div style="margin-bottom:12px; display:flex; flex-direction:column; gap:4px;">
+                            ${benefits.map(b => `<div style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:5px;"><i style="color:var(--primary); font-size:8px;" class="fa-solid fa-circle"></i> ${b}</div>`).join('')}
+                        </div>` : ''}
+
+                        ${deal.description ? `
+                        <div style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; padding:8px; border-radius:8px; font-size:12px; margin-bottom:12px; display:flex; align-items:start; gap:6px; line-height:1.4;">
+                            <span style="font-size:14px;">🎟️</span> <span>${deal.description}</span>
+                        </div>` : ''}
+                        
+                        <a href="/go/${deal.id}" target="_blank" class="buy-btn">
+                            VER OFERTA ↗
+                        </a>
+                        
+                        <div class="share-row">
+                            <a href="${wa}" target="_blank" class="share-icon">📱 WhatsApp</a>
+                            <a href="${tg}" target="_blank" class="share-icon">✈️ Telegram</a>
+                        </div>
+                        ${adminControls}
+                    </div>
+                </article>
+                `;
+            }).join('');
+        }
+
+        function getTimeAgo(dateStr) {
+            if (!dateStr) return 'Hoy';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.round(diffMs / 60000);
+
+            if (diffMins < 60) return `Hace ${diffMins} min`;
+            const diffHours = Math.round(diffMins / 60);
+            if (diffHours < 24) return `Hace ${diffHours}h`;
+            return `Hace ${Math.round(diffHours / 24)}d`;
+        }
+
+        // Filtering Logic
+        document.querySelectorAll('.filter-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const cat = btn.dataset.cat;
+                if (cat === 'all') render(allDeals);
+                else {
+                    const filtered = allDeals.filter(d => (d.categoria || 'Otros') === cat);
+                    render(filtered);
+                }
+            });
+        });
+
+        // Search Logic
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allDeals.filter(d => d.title.toLowerCase().includes(term));
+            render(filtered);
+        });
+
+        // Newsletter Logic
+        document.getElementById('newsletter-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const msg = document.getElementById('msg');
+            msg.textContent = 'Suscribiendo...';
+
+            try {
+                const res = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (res.ok) {
+                    msg.style.color = '#4ade80';
+                    msg.textContent = '✅ ¡Listo! Te avisaremos de ofertas épicas.';
+                    document.getElementById('email').value = '';
+                } else msg.textContent = '❌ Error al suscribir.';
+            } catch (e) { msg.textContent = '❌ Error de conexión.'; }
+        });
+
+        // ================= WIZARD & ADMIN LOGIC =================
+
+        function openModal() {
+            editingDealId = null; // Reset edit mode
+            document.getElementById('submitModal').style.display = 'flex';
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('submit-form').reset();
+            document.getElementById('btn-submit').innerText = 'PUBLICAR OFERTA 🚀';
+        }
+
+        function closeModal() {
+            document.getElementById('submitModal').style.display = 'none';
+        }
+
+        // EDIT DEAL (Admin)
+        function editDeal(id) {
+            const deal = allDeals.find(d => d.id === id);
+            if (!deal) return;
+
+            editingDealId = id; // Set edit mode
+            document.getElementById('submitModal').style.display = 'flex';
+
+            // Populate form directly (skip step 1)
+            document.getElementById('d-link').value = deal.link;
+            document.getElementById('d-title').value = deal.title;
+            document.getElementById('d-price').value = deal.price_offer;
+            document.getElementById('d-official').value = deal.price_official || '';
+            document.getElementById('d-cat').value = deal.categoria || 'Otros';
+            document.getElementById('d-desc').value = deal.description || '';
+            document.getElementById('d-img-url').value = deal.image;
+            document.getElementById('d-store').value = deal.tienda;
+
+            // Show preview
+            document.getElementById('d-img-preview').src = deal.image;
+            document.getElementById('d-img-preview').style.display = 'block';
+            document.getElementById('d-img-placeholder').style.display = 'none';
+
+            // Show step 2 immediately
+            document.getElementById('step-2').style.display = 'block';
+            document.getElementById('btn-submit').innerText = '💾 GUARDAR CAMBIOS';
+        }
+
+        // DELETE DEAL (Admin)
+        async function deleteDeal(id) {
+            if (!confirm('¿Seguro que quieres borrar esta oferta?')) return;
+            try {
+                await fetch('/api/delete-deal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                init(); // Refresh
+            } catch (e) { alert('Error borrando'); }
+        }
+
+        // 1. ANALYZE LINK (Create Mode)
+        async function analyzeLink() {
+            const linkInput = document.getElementById('d-link');
+            const btn = document.getElementById('btn-analyze');
+            const msg = document.getElementById('d-msg');
+            const step2 = document.getElementById('step-2');
+
+            if (!linkInput.value) { msg.textContent = '❌ Pega un link primero.'; return; }
+
+            btn.textContent = '⏳';
+            btn.disabled = true;
+            msg.textContent = 'Analizando...';
+
+            try {
+                const res = await fetch('/api/analyze-deal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ link: linkInput.value })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('d-title').value = data.title || '';
+                    document.getElementById('d-price').value = data.price || '';
+                    const img = data.img || 'https://placehold.co/400x400/18181b/ffffff?text=No+Preview';
+                    document.getElementById('d-img-preview').src = img;
+                    document.getElementById('d-img-preview').style.display = 'block';
+                    document.getElementById('d-img-placeholder').style.display = 'none';
+                    document.getElementById('d-img-url').value = img;
+                    document.getElementById('d-store').value = data.store;
+                    step2.style.display = 'block';
+                    msg.textContent = '';
+                } else {
+                    throw new Error(data.error || 'Error al analizar');
+                }
+            } catch (e) {
+                msg.textContent = '❌ ' + e.message;
+            } finally {
+                btn.textContent = '🔍';
+                btn.disabled = false;
+            }
+        }
+
+        // 2. SUBMIT FINAL (Create or Update)
+        document.getElementById('submit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            const msg = document.getElementById('d-msg');
+
+            btn.innerText = editingDealId ? 'GUARDANDO...' : 'PUBLICANDO...';
+            btn.disabled = true;
+
+            const payload = {
+                id: editingDealId, // If present, it's an update
+                link: document.getElementById('d-link').value,
+                title: document.getElementById('d-title').value,
+                price: parseFloat(document.getElementById('d-price').value),
+                price_official: parseFloat(document.getElementById('d-official').value || 0),
+                image: document.getElementById('d-img-url').value,
+                store: document.getElementById('d-store').value,
+                category: document.getElementById('d-cat').value,
+                description: document.getElementById('d-desc').value
+            };
+
+            const endpoint = editingDealId ? '/api/update-deal' : '/api/submit-deal';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    msg.style.color = '#4ade80';
+                    msg.innerHTML = editingDealId ? '✅ ¡Actualizado!' : '✅ ¡Publicado!';
+                    init();
+                    setTimeout(() => {
+                        closeModal();
+                        btn.disabled = false;
+                        msg.textContent = '';
+                    }, 1500);
+                } else {
+                    throw new Error('Error al guardar');
+                }
+            } catch (e) {
+                msg.style.color = '#f87171';
+                msg.textContent = '❌ ' + e.message;
+                btn.disabled = false;
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('submitModal').addEventListener('click', (e) => {
+            if (e.target.id === 'submitModal') closeModal();
+        });
+
+        init();
+        setInterval(init, 60000); 
+    </script>
+</body>
+
+</html>

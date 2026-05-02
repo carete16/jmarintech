@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masbarato Express | Gánale al comercio local</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a56db;
+            --secondary: #6b21a8;
+            --accent: #0ea5e9;
+            --success: #0d9488;
+            --bg-sidebar: #ffffff;
+            --bg-main: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body {
+            display: flex;
+            background: var(--bg-main);
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 210px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            text-decoration: none;
+            color: #4f46e5;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: #4f46e5;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+        }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+        .nav-item i { width: 16px; font-size: 0.9rem; }
+
+        .agent-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: auto;
+        }
+        .agent-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .agent-text {
+            font-size: 0.72rem;
+            line-height: 1.4;
+            color: #64748b;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            margin-left: 210px;
+            padding: 32px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* HERO SECTION */
+        
+        /* AMBIENT ORBS */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+            animation: orbMove 20s infinite alternate;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: #3b82f6;
+            top: -100px; left: -100px;
+        }
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: #10b981;
+            bottom: -50px; right: -50px;
+            animation-delay: -5s;
+        }
+        @keyframes orbMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
+        }
+
+        /* HERO SECTION PREMIUM DYNAMIC */
+        .hero {
+            background: radial-gradient(circle at top right, #0f172a, #020617);
+            border-radius: 30px;
+            margin-bottom: 40px;
+            height: 45vh;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 60px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: bgPulse 10s infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .hero-content {
+            flex: 1;
+            text-align: left;
+            z-index: 2;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 2;
+            height: 100%;
+        }
+
+        .hero-image img {
+            max-height: 90%;
+            width: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            background: linear-gradient(to bottom, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero h1 span {
+            color: #3b82f6;
+            -webkit-text-fill-color: #3b82f6;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 500px;
+            line-height: 1.6;
+            font-weight: 400;
+            margin-bottom: 25px;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: black;
+            padding: 12px 28px;
+            border-radius: 100px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .hero-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.2);
+        }
+
+        /* GRID SYSTEM */
+        }
+        .search-input {
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 14px 14px 44px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(26,86,219,0.05); }
+
+        /* GRID */
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        /* CARD */
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
+
+        .card-img {
+            aspect-ratio: 4/3;
+            background: #f8fafc;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .card-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #0d9488;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 2;
+        }
+        .card-badge.marketing { background: #f59e0b; }
+
+        .card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.8em;
+        }
+
+        .price-container { margin-bottom: 16px; }
+        .price-label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .price-flex { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .price-value { font-size: 1.6rem; font-weight: 900; color: var(--text-main); }
+        .price-original { font-size: 0.85rem; color: #94a3b8; text-decoration: line-through; }
+        .price-savings { font-size: 0.75rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 6px; }
+        
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 12px;
+        }
+        .benefit-item {
+            font-size: 0.72rem;
+            color: #475569;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .benefit-item i { color: #f59e0b; font-size: 0.6rem; }
+
+        .price-note { font-size: 0.65rem; color: #94a3b8; margin-bottom: 16px; }
+
+        .wa-btn {
+            background: #065f46;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            margin-top: auto;
+        }
+        .wa-btn:hover { background: #064e3b; transform: scale(1.02); }
+
+        /* SPECS LIST */
+        .specs-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+        .spec-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .spec-item i {
+            width: 20px;
+            height: 20px;
+            background: #f8fafc;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.65rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 20px; }
+            .hero { padding: 40px 24px; }
+            .hero h1 { font-size: 1.8rem; }
+            .deals-grid { grid-template-columns: 1fr; }
+        }
+        /* MODAL VISTA EXPANDIDA */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-container {
+            background: white;
+            width: 100%;
+            max-width: 1100px;
+            max-height: 90vh;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-close {
+            position: absolute;
+            top: 24px; right: 24px;
+            width: 44px; height: 44px;
+            background: #f8fafc;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: #e2e8f0; transform: rotate(90deg); }
+        .modal-left { flex: 1.2; background: #f8fafc; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 400px; }
+        .modal-left img { max-width: 100%; max-height: 500px; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1)); }
+        .modal-right { flex: 1; padding: 60px 40px; display: flex; flex-direction: column; overflow-y: auto; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 992px) {
+            .modal-container { flex-direction: column; max-height: 95vh; }
+            .modal-left { padding: 20px; min-height: 300px; }
+            .modal-right { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body><div class="orb orb-1"></div><div class="orb orb-2"></div>
+
+    <aside class="sidebar">
+        <a href="/" class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-paper-plane"></i></div>
+            Masbarato Express
+        </a>
+
+        <nav class="nav-list">
+            <button class="nav-item active"><i class="fa-solid fa-bolt"></i> Ofertas Flash</button>
+            <button class="nav-item" onclick="window.open('https://wa.me/573012722472','_blank')"><i class="fa-brands fa-whatsapp"></i> Soporte VIP</button>
+            <button class="nav-item"><i class="fa-solid fa-shield"></i> Garantía Legal</button>
+        </nav>
+
+        <div class="agent-card">
+            <div class="agent-label">Tu agente en USA</div>
+            <div class="agent-text">Buscamos, compramos e importamos por ti. Sin casilleros complicados.</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">💎 CALIDAD ORIGINAL & PRECIOS IMBATIBLES</div>
+                <h1>Tecnología de Elite al<br><span>Mejor Precio</span></h1>
+                <p>Seleccionamos solo los mejores equipos de las marcas líderes a nivel mundial. Calidad 100% original con descuentos reales que no encontrarás en ninguna otra tienda.</p>
+                <a href="#" class="hero-cta">EXPLORAR SELECCIÓN <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="hero-image">
+                <img src="/assets/hero-tech.png" alt="Premium Tech">
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="¿Qué buscas hoy? Busca por producto, marca o tienda...">
+            </div>
+        </div>
+
+        <div class="deals-grid" id="dealsGrid">
+            <!-- Cargando... -->
+        </div>
+    </main>
+
+    <script>
+        const WA_PHONE = '573012722472';
+        let allDeals = [];
+
+        const formatCOP = (val) => {
+            if (!val) return 'Consultar';
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+        };
+
+        async function init() {
+            try {
+                const res = await fetch('/api/deals/express?t=' + Date.now());
+                allDeals = await res.json();
+                render(allDeals);
+
+                // Autocomprobar si hay un ID en la URL para abrir el producto
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('id');
+                if (productId) {
+                    setTimeout(() => openProductModal(productId), 500);
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('dealsGrid').innerHTML = '<p>Error cargando ofertas.</p>';
+            }
+        }
+
+        function render(deals) {
+            const grid = document.getElementById('dealsGrid');
+            if (deals.length === 0) {
+                grid.innerHTML = '<p>No hay ofertas disponibles.</p>';
+                return;
+            }
+
+            grid.innerHTML = deals.map(deal => {
+                const priceStr = formatCOP(deal.price_cop);
+                const displayTitle = deal.selling_title || deal.title;
+                const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/go/${deal.id}`)}`;
+                
+                let specs = {};
+                try { 
+                    specs = typeof deal.structured_specs === 'string' ? JSON.parse(deal.structured_specs) : (deal.structured_specs || {});
+                } catch(e) { specs = {}; }
+
+                let benefits = [];
+                try {
+                    benefits = typeof deal.benefits === 'string' ? JSON.parse(deal.benefits) : (deal.benefits || []);
+                } catch(e) { benefits = []; }
+
+                const specsHtml = `
+                    <ul class="specs-list">
+                        ${specs.screen ? `<li class="spec-item"><i class="fa-solid fa-desktop"></i> ${specs.screen}</li>` : ''}
+                        ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu}</li>` : ''}
+                        ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram}</li>` : ''}
+                        ${specs.disk ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.disk}</li>` : ''}
+                    </ul>
+                `;
+
+                const benefitsHtml = benefits.length > 0 ? `
+                    <ul class="benefits-list">
+                        ${benefits.map(b => `<li class="benefit-item"><i class="fa-solid fa-circle-check"></i> ${b}</li>`).join('')}
+                    </ul>
+                ` : '';
+
+                // --- LÓGICA DE PRECIOS Y AHORRO ---
+                // Priorizamos el campo manual market_price_cop si el usuario lo llenó
+                const marketRef = deal.market_price_cop || specs.marketHighCOP || specs.marketMedianCOP || specs.marketPriceCOP || null;
+                const ahorroPesos = marketRef ? (marketRef - deal.price_cop) : 0;
+                
+                // Cálculo dinámico del porcentaje de ahorro real (frente al mercado)
+                const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : (deal.savings || 0);
+
+                // Si hay original_price (USD) en marketing, convertirlo a COP para mostrar
+                const originalPriceCOP = deal.original_price ? (deal.original_price * (deal.custom_dolar || 4000)) : null;
+                let priceHtml = `
+                    <div class="price-container">
+                        <div class="price-flex">
+                            <span class="price-value">${priceStr}</span>
+                            ${realSavingsPercent > 0 ? `<span class="price-savings">-${realSavingsPercent}%</span>` : ''}
+                        </div>
+
+                        <div class="mt-1" style="font-size: 0.85rem;">
+                            ${marketRef && ahorroPesos > 0 
+                                ? `<b style="color:#059669;">Ahorras ${formatCOP(ahorroPesos)} hoy</b>` 
+                                : (deal.savings ? `<b style="color:#059669;">Ahorras un ${deal.savings}%</b>` : '<span class="text-muted">Importación y entrega incluida.</span>')
+                            }
+                        </div>
+
+                        ${marketRef ? `<div style="font-size:0.7rem; color:#64748b; margin-top:8px; font-weight:500;">Precio promedio en Colombia: <span style="text-decoration:line-through; opacity:0.7;">${formatCOP(marketRef)}</span></div>` : ''}
+                    </div>
+                `;
+
+                // Lógica de Badge Dinámico (Marketing Automatizado)
+                let displayBadge = deal.badge;
+                if (marketRef > 0) {
+                    if (realSavingsPercent >= 40) displayBadge = "GANGA";
+                    else if (realSavingsPercent >= 25) displayBadge = "OFERTA";
+                    else if (realSavingsPercent >= 10) displayBadge = "PRECIO ESPECIAL";
+                    else displayBadge = null; // Menos de 10% no merece badge especial
+                }
+
+                return `
+                <div class="card" onclick="openProductModal('${deal.id}')" style="cursor: pointer;">
+                    <div class="card-img">
+                        <!-- 3. BADGE (Arriba) -->
+                        ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-fire"></i> ${displayBadge}</div>` : `<div class="card-badge"><i class="fa-solid fa-check"></i> TODO INCLUIDO</div>`}
+                        <img src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" onerror="this.src='https://placehold.co/400x300?text=Sin+Imagen'">
+                    </div>
+                    <div class="card-body">
+                        <!-- 1. TÍTULO (Venta vs Normal) -->
+                        <div class="card-title">${displayTitle}</div>
+                        
+                        ${Object.keys(specs).length > 0 ? specsHtml : ''}
+                        
+                        <!-- 2. PRECIOS -->
+                        ${priceHtml}
+                        
+                        <!-- 4. BENEFICIOS -->
+                        ${benefitsHtml}
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <a href="${waLink}" target="_blank" class="wa-btn" style="flex: 1;" onclick="event.stopPropagation()">
+                                PEDIR POR WHATSAPP <i class="fa-brands fa-whatsapp"></i>
+                            </a>
+                            <button onclick="event.stopPropagation(); shareProduct('${deal.id}')" class="wa-btn" style="width: 50px; background: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-share-nodes"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Filtering
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        function applyFilters() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allDeals.filter(d => {
+                return d.title.toLowerCase().includes(term) || 
+                       (d.selling_title || '').toLowerCase().includes(term) ||
+                       (d.tienda || '').toLowerCase().includes(term);
+            });
+
+            render(filtered);
+        }
+
+
+        function openProductModal(id) {
+            const deal = allDeals.find(d => d.id === id);
+            if (!deal) return;
+
+            const modal = document.getElementById('productModal');
+            const content = document.getElementById('modalContent');
+            
+            const displayTitle = deal.selling_title || deal.title;
+            const priceStr = formatCOP(deal.price_cop);
+            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/go/${deal.id}`)}`;
+            
+            let specs = {};
+            try { specs = typeof deal.structured_specs === 'string' ? JSON.parse(deal.structured_specs) : (deal.structured_specs || {}); } catch(e) {}
+            
+            let benefits = [];
+            try { benefits = typeof deal.benefits === 'string' ? JSON.parse(deal.benefits) : (deal.benefits || []); } catch(e) {}
+
+            const marketRef = deal.market_price_cop || specs.marketHighCOP || specs.marketMedianCOP || specs.marketPriceCOP || null;
+            const ahorroPesos = marketRef ? (marketRef - deal.price_cop) : 0;
+            const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : (deal.savings || 0);
+
+            content.innerHTML = `
+                <div class="modal-left" style="padding: 20px;">
+                    <img src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" style="max-height: 350px;">
+                </div>
+                <div class="modal-right" style="padding: 30px 25px;">
+                    <div style="font-size: 0.7rem; font-weight: 800; color: #3b82f6; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.1em;">
+                        ${deal.tienda || 'JMARIN TECH'} • SELECCIÓN EXCLUSIVA
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 15px; line-height: 1.2;">${displayTitle}</h2>
+                    
+                    <div class="price-container" style="border-top: none; padding-top: 0; margin-bottom: 20px;">
+                        <div class="price-flex" style="align-items: center; gap: 12px; margin-bottom: 5px;">
+                            <span class="price-value" style="font-size: 2.8rem;">${priceStr}</span>
+                            ${realSavingsPercent > 0 ? `<span class="price-savings" style="font-size: 1.1rem; padding: 6px 14px; background:#0f172a;">-${realSavingsPercent}%</span>` : ''}
+                        </div>
+                        
+                        ${marketRef && ahorroPesos > 0 ? `<div style="font-size: 1.2rem; color: #059669; font-weight: 800; margin-bottom: 5px;">¡Ahorras ${formatCOP(ahorroPesos)} hoy!</div>` : ''}
+                        
+                        ${marketRef ? `<div style="font-size: 0.9rem; color: #64748b; font-weight: 500;">Precio promedio en Colombia: <span style="text-decoration: line-through; opacity: 0.8;">${formatCOP(marketRef)}</span></div>` : ''}
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                            ${specs.screen ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-desktop" style="color:#2563eb"></i> ${specs.screen}</div>` : ''}
+                            ${specs.cpu ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-microchip" style="color:#2563eb"></i> ${specs.cpu}</div>` : ''}
+                            ${specs.ram ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-memory" style="color:#2563eb"></i> ${specs.ram}</div>` : ''}
+                            ${specs.disk ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-hard-drive" style="color:#2563eb"></i> ${specs.disk}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        ${benefits.length > 0 ? benefits.slice(0,3).map(b => `<div class="benefit-item" style="font-size: 0.85rem; margin-bottom: 5px;"><i class="fa-solid fa-circle-check" style="color:#10b981"></i> ${b}</div>`).join('') : `
+                            <div class="benefit-item" style="font-size: 0.85rem;"><i class="fa-solid fa-shield-check" style="color:#10b981"></i> Garantía y soporte técnico</div>
+                        `}
+                    </div>
+
+                    <div style="margin-top: auto; display: flex; gap: 10px;">
+                        <a href="${waLink}" target="_blank" class="wa-btn" style="flex: 1; padding: 18px; font-size: 1.1rem; background: #065f46; box-shadow: 0 10px 20px -5px rgba(6, 95, 70, 0.3);">
+                            CONSULTAR POR WHATSAPP <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                        <button onclick="shareProduct('${deal.id}')" class="wa-btn" style="width: 70px; background: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-share-nodes" style="font-size: 1.5rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function shareProduct(id) {
+            const deal = allDeals.find(d => d.id === id);
+            if (!deal) return;
+
+            const title = deal.selling_title || deal.title;
+            const price = formatCOP(deal.price_cop);
+            const url = `${window.location.origin}/p/${deal.id}`;
+            const text = `💎 ¡Selección Exclusiva en JMARIN TECH!\n\n📦 ${title}\n💰 Precio: ${price}\n\nVer detalles y fotos aquí: ${url}`;
+
+            // Crear el menú personalizado
+            const menu = document.createElement('div');
+            menu.id = 'shareMenu';
+            menu.style = `
+                position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 20px; padding: 20px; z-index: 9999;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 280px;
+                display: flex; flex-direction: column; gap: 12px;
+                animation: slideUp 0.3s ease;
+            `;
+
+            menu.innerHTML = `
+                <div style="color:white; font-weight:700; font-size:0.9rem; margin-bottom:5px; text-align:center;">COMPARTIR PRODUCTO</div>
+                <a href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" 
+                   style="background:#25d366; color:white; padding:12px; border-radius:12px; text-decoration:none; text-align:center; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px;"
+                   onclick="document.getElementById('shareMenu').remove()">
+                   <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </a>
+                <a href="mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}" 
+                   style="background:#ef4444; color:white; padding:12px; border-radius:12px; text-decoration:none; text-align:center; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px;"
+                   onclick="document.getElementById('shareMenu').remove()">
+                   <i class="fa-solid fa-envelope"></i> Correo Electrónico
+                </a>
+                <button onclick="this.parentElement.remove()" style="background:transparent; color:#94a3b8; border:none; padding:5px; cursor:pointer; font-size:0.8rem;">Cerrar</button>
+            `;
+
+            const existing = document.getElementById('shareMenu');
+            if (existing) existing.remove();
+            document.body.appendChild(menu);
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        init();
+    </script>
+
+    <div id="productModal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
+        <div class="modal-container">
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div id="modalContent" class="w-100 d-flex flex-column flex-lg-row">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
