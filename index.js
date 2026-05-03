@@ -16,6 +16,35 @@ const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 app.use(express.json());
 
+// AUTO-SEED: Si la base de datos está vacía, restaurar desde seed_products.json
+try {
+    const check = db.prepare("SELECT COUNT(*) as count FROM published_deals").get();
+    if (check.count === 0) {
+        const seedPath = path.join(__dirname, 'seed_products.json');
+        if (require('fs').existsSync(seedPath)) {
+            const seedData = JSON.parse(require('fs').readFileSync(seedPath, 'utf8'));
+            const stmt = db.prepare(`
+                INSERT OR REPLACE INTO published_deals 
+                (id, title, selling_title, link, original_link, image, price_cop, price_offer, price_official, 
+                 market_price_cop, tienda, categoria, structured_specs, benefits, badge, savings, status, posted_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            `);
+            for (const deal of seedData) {
+                stmt.run(
+                    deal.id, deal.title, deal.selling_title, deal.link, deal.original_link,
+                    deal.image, deal.price_cop, deal.price_offer, deal.price_official,
+                    deal.market_price_cop, deal.tienda, deal.categoria,
+                    deal.structured_specs, deal.benefits, deal.badge,
+                    deal.savings, 'published', deal.posted_at
+                );
+            }
+            console.log(`✅ Restaurados ${seedData.length} productos desde seed_products.json`);
+        }
+    }
+} catch (e) {
+    console.error("❌ Error en Auto-Seed:", e.message);
+}
+
 // Fallback para SPA: Cualquier ruta no encontrada sirve el index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
