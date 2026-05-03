@@ -129,7 +129,7 @@ class TelegramNotifier {
                     const copFormatted = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop);
                     caption += `\n\n🇨🇴 <b>PRECIO FINAL COLOMBIA: ${copFormatted}</b>`;
                     caption += `\n📦 <i>Envío Gratis e Impuestos Incluidos</i>`;
-                    caption += `\n🚀 <a href="https://masbaratoexpress.onrender.com/">Ver en Masbarato Express</a>`;
+                    caption += `\n🚀 <a href="https://jmarintech.onrender.com/">Ver en JMARIN TECH</a>`;
                 } else if (deal.coupon) {
                     caption += `\n\n🎟️ <b>CUPÓN:</b> <code>${deal.coupon}</code>`;
                 }
