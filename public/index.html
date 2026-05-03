@@ -525,10 +525,14 @@
                 render(allDeals);
 
                 // Autocomprobar si hay un ID en la URL para abrir el producto
-                const urlParams = new URLSearchParams(window.location.search);
-                const productId = urlParams.get('id');
-                if (productId) {
-                    setTimeout(() => openProductModal(productId), 500);
+                const path = window.location.pathname;
+                if (path.startsWith('/p/')) {
+                    const productId = path.split('/p/')[1];
+                    if (productId) setTimeout(() => openProductModal(productId), 500);
+                } else {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const productId = urlParams.get('id');
+                    if (productId) setTimeout(() => openProductModal(productId), 500);
                 }
             } catch (err) {
                 console.error(err);
@@ -546,7 +550,7 @@
             grid.innerHTML = deals.map(deal => {
                 const priceStr = formatCOP(deal.price_cop);
                 const displayTitle = deal.selling_title || deal.title;
-                const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/go/${deal.id}`)}`;
+                const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/p/${deal.id}`)}`;
                 
                 let specs = {};
                 try { 
@@ -668,7 +672,7 @@
             
             const displayTitle = deal.selling_title || deal.title;
             const priceStr = formatCOP(deal.price_cop);
-            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/go/${deal.id}`)}`;
+            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/p/${deal.id}`)}`;
             
             let specs = {};
             try { specs = typeof deal.structured_specs === 'string' ? JSON.parse(deal.structured_specs) : (deal.structured_specs || {}); } catch(e) {}
