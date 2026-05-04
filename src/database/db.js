@@ -65,6 +65,11 @@ try {
   try { db.exec("ALTER TABLE published_deals ADD COLUMN benefits TEXT"); } catch (e) { }
   try { db.exec("ALTER TABLE published_deals ADD COLUMN badge TEXT"); } catch (e) { }
   try { db.exec("ALTER TABLE published_deals ADD COLUMN market_price_cop REAL DEFAULT 0"); } catch (e) { }
+  try { db.exec("ALTER TABLE published_deals ADD COLUMN product_condition TEXT DEFAULT 'Nuevo'"); } catch (e) { }
+  // --- SISTEMA DE URGENCIA / STOCK VIRTUAL ---
+  try { db.exec("ALTER TABLE published_deals ADD COLUMN stock_virtual INTEGER DEFAULT 5"); } catch (e) { }
+  try { db.exec("ALTER TABLE published_deals ADD COLUMN stock_status TEXT DEFAULT 'disponible'"); } catch (e) { }
+  try { db.exec("ALTER TABLE published_deals ADD COLUMN stock_updated_at DATETIME"); } catch (e) { }
 
   // --- TABLAS EXTRA ---
   db.exec(`
@@ -150,8 +155,8 @@ const saveDeal = (deal) => {
   try {
     const stmt = db.prepare(`
         INSERT OR REPLACE INTO published_deals 
-        (id, link, original_link, title, price_official, price_offer, image, gallery, tienda, categoria, description, coupon, is_historic_low, score, status, price_cop, weight, profit, custom_dolar, custom_profit_percent, original_specs, structured_specs, selling_title, original_price, savings, benefits, badge, market_price_cop)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, link, original_link, title, price_official, price_offer, image, gallery, tienda, categoria, description, coupon, is_historic_low, score, status, price_cop, weight, profit, custom_dolar, custom_profit_percent, original_specs, structured_specs, selling_title, original_price, savings, benefits, badge, market_price_cop, product_condition)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
     const result = stmt.run(
       deal.id,
@@ -181,7 +186,8 @@ const saveDeal = (deal) => {
       deal.savings ? parseFloat(deal.savings) : null,
       Array.isArray(deal.benefits) ? JSON.stringify(deal.benefits) : (deal.benefits || null),
       deal.badge || null,
-      deal.market_price_cop || 0
+      deal.market_price_cop || 0,
+      deal.product_condition || deal.condition || 'Nuevo'
     );
 
     // --- DISPARADOR AUTOMÁTICO A LA NUBE (RENDER) ---

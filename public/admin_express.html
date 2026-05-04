@@ -565,6 +565,11 @@
                     style="font-size: 0.7rem;">
                     <i class="fa-solid fa-satellite-dish me-1"></i> ESCANEAR AHORA
                 </button>
+                <button onclick="clearPendingHistory()" id="btnClearPending"
+                    class="btn btn-danger btn-sm fw-bold rounded-pill px-3 shadow-sm"
+                    style="font-size: 0.7rem; display: none;">
+                    <i class="fa-solid fa-trash-can me-1"></i> BORRAR PENDIENTES
+                </button>
                 <button onclick="runHealthCheck()"
                     class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-3 shadow-sm"
                     style="font-size: 0.7rem; background: white;">
@@ -633,6 +638,11 @@
             document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
             document.getElementById('tab-published').classList.toggle('active', tab === 'published');
             document.getElementById('tab-archived').classList.toggle('active', tab === 'archived');
+            
+            // Mostrar botón de borrar solo en pendientes
+            const btnClear = document.getElementById('btnClearPending');
+            if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
+
             await loadData();
         }
 
@@ -666,7 +676,8 @@
                     title: data.title || '',
                     image: data.image || '',
                     store: data.store,
-                    specs: data.specs || ''
+                    specs: data.specs || '',
+                    condition: data.condition || 'Nuevo'
                 }, {
                     headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
                 });
@@ -752,7 +763,7 @@
                 await axios.post(API_URL + '/admin/express/manual-post', {
                     url: item.sourceLink,
                     price: item.referencePrice || 0,
-                    weight: 3, // Default
+                    weight: 5, // Default
                     category: item.categoria || 'Electrónica Premium',
                     title: item.title,
                     image: item.image,
@@ -939,15 +950,15 @@
                         <textarea class="form-control fw-bold border mb-3 ${!item.title ? 'border-danger' : ''}" rows="2" style="font-size: 1.1rem; border-radius: 12px; background: ${!item.title ? '#fff9f9' : '#fff'}" id="title-${item.id}" placeholder="Nombre del producto aquí...">${item.title || ''}</textarea>
                         
                         <div class="row g-2 mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="small fw-bold text-muted mb-1">PRECIO USD ${priceUSD <= 0 ? '<span class="text-danger">*</span>' : ''}</label>
                                 <input type="number" id="price-${item.id}" value="${priceUSD}" class="form-control fw-bold text-center border-primary shadow-sm" oninput="updateRow('${item.id}')" placeholder="0.00" style="font-size: 1.1rem;">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="small fw-bold text-muted mb-1">PESO LBS <span class="badge bg-light text-primary border" style="font-size: 0.6rem;">🤖 IA + 📦 Caja</span></label>
                                 <input type="text" id="weight-${item.id}" value="${finalWeight}" class="form-control fw-bold text-center" oninput="updateRow('${item.id}')" style="font-size: 1.1rem;">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4 d-none">
                                 <label class="small fw-bold text-muted mb-1">CATEGORÍA</label>
                                 <select id="cat-${item.id}" class="form-select form-select-sm fw-bold" onchange="updateRow('${item.id}')">
                                     <option value="Lifestyle & Street" ${finalCat === 'Lifestyle & Street' ? 'selected' : ''}>Lifestyle & Street</option>
@@ -1004,7 +1015,7 @@
                                 <label class="small fw-bold text-muted">📝 DESCRIPCIÓN Y NOTAS EXTRA (Opcional)</label>
                                 <button onclick="optimizeAll('${item.id}')" class="btn-ia-magic" style="background: #7c3aed; color: white;"><i class="fa-solid fa-sparkles"></i> OPTIMIZAR TODO</button>
                             </div>
-                            <textarea class="form-control xsmall border" rows="3" id="specs-${item.id}" placeholder="Pega aquí las especificaciones del sitio original..." style="font-size: 0.75rem; border-radius: 12px; background: #f8fafc;">${item.original_specs || item.specs || ''}</textarea>
+                            <textarea class="form-control xsmall border" rows="3" id="specs-${item.id}" placeholder="Pega aquí las especificaciones del sitio original..." style="font-size: 0.75rem; border-radius: 12px; background: #f8fafc;" oninput="detectConditionFromText('${item.id}'); updateRow('${item.id}')">${item.original_specs || item.specs || ''}</textarea>
                             <input type="hidden" id="structured-specs-${item.id}" value='${item.structured_specs || "{}"}'>
                         </div>
 
@@ -1044,12 +1055,33 @@
                                     <input type="number" id="original-price-${item.id}" value="${item.original_price || ''}" class="form-control form-control-sm" placeholder="0.00" oninput="updateRow('${item.id}')">
                                 </div>
                                 <div class="col-6">
+                                    <label class="xsmall fw-bold text-muted">Badge / Etiqueta</label>
+                                    <input type="text" id="badge-${item.id}" value="${item.badge || ''}" class="form-control form-control-sm" placeholder="Ej: TOP VENTAS" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-6 d-none">
                                     <label class="xsmall fw-bold text-muted">Ahorro (%)</label>
                                     <input type="number" id="savings-${item.id}" value="${item.savings || ''}" class="form-control form-control-sm" placeholder="Ej: 30" oninput="updateRow('${item.id}')">
                                 </div>
                                 <div class="col-6">
-                                    <label class="xsmall fw-bold text-muted">Badge / Etiqueta</label>
-                                    <input type="text" id="badge-${item.id}" value="${item.badge || ''}" class="form-control form-control-sm" placeholder="Ej: TOP VENTAS" oninput="updateRow('${item.id}')">
+                                    <label class="xsmall fw-bold text-muted">Estado del Producto</label>
+                                    <select id="condition-${item.id}" class="form-select form-select-sm xsmall fw-bold" onchange="updateRow('${item.id}')">
+                                        ${(() => {
+                                            // Detección inteligente: si la DB dice Nuevo pero las specs/título dicen Refurbished, corregir en el render
+                                            const allText = ((item.product_condition || '') + ' ' + (item.original_specs || '') + ' ' + (item.title || '')).toLowerCase();
+                                            let smartCondition = item.product_condition || 'Nuevo';
+                                            if (smartCondition === 'Nuevo') {
+                                                if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) smartCondition = 'Refurbished';
+                                                else if (allText.includes('open box')) smartCondition = 'Open Box';
+                                                else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) smartCondition = 'Usado';
+                                            }
+                                            return `
+                                                <option value="Nuevo" ${smartCondition === 'Nuevo' ? 'selected' : ''}>Nuevo</option>
+                                                <option value="Refurbished" ${smartCondition === 'Refurbished' ? 'selected' : ''}>Refurbished (Reformado)</option>
+                                                <option value="Open Box" ${smartCondition === 'Open Box' ? 'selected' : ''}>Open Box</option>
+                                                <option value="Usado" ${smartCondition === 'Usado' ? 'selected' : ''}>Usado</option>
+                                            `;
+                                        })()}
+                                    </select>
                                 </div>
                                 <div class="col-12">
                                     <label class="xsmall fw-bold text-muted">Precio Mercado COP (Referencia Manual)</label>
@@ -1065,6 +1097,20 @@
                                         } catch(e) { return benefits; }
                                     })()}</textarea>
                                 </div>
+                                ${item.status === 'published' ? `<div class="col-12">
+                                    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:10px 12px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="xsmall fw-bold" style="color:#c2410c; margin:0;">🔥 Stock Virtual / Urgencia</label>
+                                            <span id="stock-badge-${item.id}" class="badge" style="font-size:0.6rem; background:${(item.stock_status||'disponible')==='agotado'?'#ef4444':(item.stock_status||'disponible')==='pocas_unidades'?'#f97316':'#22c55e'}; color:white;">${(item.stock_status||'disponible')==='agotado'?'❌ Agotado':(item.stock_status||'disponible')==='pocas_unidades'?'🔥 Pocas unidades':'🟢 Disponible'}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <input type="number" id="stock-input-${item.id}" value="${item.stock_virtual??5}" min="0" max="99" class="form-control form-control-sm" style="width:65px; font-weight:700;">
+                                            <button onclick="updateStock('${item.id}', document.getElementById('stock-input-${item.id}').value)" class="btn btn-sm btn-warning" style="font-size:0.65rem; padding:3px 8px;">Guardar</button>
+                                            <span class="xsmall text-muted">Rápido:</span>
+                                            ${[0,1,2,3,5].map(n=>`<button onclick="updateStock('${item.id}',${n})" class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;background:${n===0?'#ef4444':'#f97316'};color:white;border:none;border-radius:6px;">${n===0?'Ago':n}</button>`).join('')}
+                                        </div>
+                                    </div>
+                                </div>` : ''}
                             </div>
                         </div>
 
@@ -1151,7 +1197,8 @@
                         ${isPending ?
                         `                            <button onclick="toggleStatus('${item.id}', true)" class="btn btn-primary fw-bold p-3 w-100 rounded-4 mb-2">APROBAR Y PUBLICAR <i class="fa-solid fa-paper-plane ms-2"></i></button>
                             <button onclick="saveChanges('${item.id}')" class="btn btn-outline-primary btn-sm fw-bold w-100 rounded-3 mb-2"><i class="fa-solid fa-check me-1"></i> GUARDAR SIN PUBLICAR</button>
-                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-1" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                            <button onclick="copyToMarketplace('${item.id}')" class="btn btn-dark btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#1877f2; border:none;"><i class="fa-brands fa-facebook me-1"></i> INFO PARA MARKETPLACE</button>
                         ` :
                         `
                             <div class="mb-3">
@@ -1162,7 +1209,8 @@
                                 </label>
                             </div>
                             <button onclick="saveChanges('${item.id}')" class="btn btn-info btn-sm text-white fw-bold w-100 rounded-3 mb-2"><i class="fa-solid fa-floppy-disk me-1"></i> GUARDAR CAMBIOS</button>
-                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                            <button onclick="copyToWA('${item.id}')" class="btn btn-success btn-sm fw-bold w-100 rounded-3 mb-1" style="background:#25d366; border:none;"><i class="fa-brands fa-whatsapp me-1"></i> COPIAR PARA WHATSAPP</button>
+                            <button onclick="copyToMarketplace('${item.id}')" class="btn btn-dark btn-sm fw-bold w-100 rounded-3 mb-2" style="background:#1877f2; border:none;"><i class="fa-brands fa-facebook me-1"></i> INFO PARA MARKETPLACE</button>
                             `
                     }
                         
@@ -1177,6 +1225,8 @@
                     </div>
                 </div>`;
                 container.appendChild(card);
+                // Auto-detectar condición del producto al cargar la tarjeta
+                setTimeout(() => detectConditionFromText(item.id), 100);
                 // Auto-cargar precio de referencia Google Colombia
                 // YA NO AUTO-CARGAMOS (Para mayor velocidad)
                 /* if (item.title) {
@@ -1190,7 +1240,7 @@
         function guessIA(title) {
             const t = title.toLowerCase();
             let cat = "Lifestyle & Street";
-            let productWeight = 2.0; // Peso base del producto solo
+            let productWeight = 3.5; // Peso base del producto solo (Default para llegar a 5lb con empaque)
 
             if (t.match(/laptop|macbook|computer|ssd|cpu|gpu|monitor|keyboard|mouse|headset|gaming|tech/)) {
                 cat = "Electrónica Premium";
@@ -1358,7 +1408,8 @@
                     savings: document.getElementById(`savings-${id}`).value,
                     benefits: document.getElementById(`benefits-${id}`).value.split('\n').filter(b => b.trim() !== ''),
                     badge: document.getElementById(`badge-${id}`).value,
-                    marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value)
+                    marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value),
+                    product_condition: document.getElementById(`condition-${id}`).value
                 }, { headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' } });
 
                 if (response.data.success) {
@@ -1370,6 +1421,33 @@
             } catch (e) {
                 const msg = e.response?.data?.error || "Error de conexión al guardar";
                 alert("❌ ERROR: " + msg);
+            }
+        }
+
+        async function clearPendingHistory() {
+            if (!confirm("⚠️ ¿Estás seguro de que deseas borrar TODAS las ofertas pendientes? Esta acción no se puede deshacer.")) {
+                return;
+            }
+
+            const btn = document.getElementById('btnClearPending');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> BORRANDO...';
+            btn.disabled = true;
+
+            try {
+                const res = await axios.post(API_URL + '/admin/express/clear-pending', {}, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                
+                if (res.data.success) {
+                    alert(`✅ Se han borrado ${res.data.count} ofertas pendientes.`);
+                    await loadData();
+                }
+            } catch (e) {
+                alert("Error al borrar pendientes: " + (e.response?.data?.error || e.message));
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -1443,7 +1521,8 @@
                         savings: savings,
                         benefits: benefitsText.split('\n').filter(b => b.trim() !== ''),
                         badge: badge,
-                        marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value)
+                        marketPriceCOP: normalizeCOP(document.getElementById(`market-price-cop-${id}`).value),
+                        product_condition: document.getElementById(`condition-${id}`).value
                     }, { headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' } });
                 } else {
                     await axios.post(API_URL + '/admin/express/finalize', { id }, {
@@ -1567,7 +1646,15 @@
                 originalPrice,
                 savings: savingsPercent,
                 benefits: benefitsArr.slice(0, 5),
-                badge
+                badge,
+                condition: (() => {
+                    const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
+                    const low = (title + ' ' + (specs.condition || '') + ' ' + extraNotes).toLowerCase();
+                    if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent')) return 'Refurbished';
+                    if (low.includes('open box') || low.includes('caja abierta')) return 'Open Box';
+                    if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) return 'Usado';
+                    return 'Nuevo';
+                })()
             };
         }
 
@@ -1580,11 +1667,33 @@
             document.getElementById(`savings-${id}`).value = data.savings;
             document.getElementById(`badge-${id}`).value = data.badge;
             document.getElementById(`benefits-${id}`).value = data.benefits.join('\n');
+            document.getElementById(`condition-${id}`).value = data.condition;
 
             const section = document.getElementById(`selling-title-${id}`).closest('.shadow-sm');
             section.style.background = "#fffbeb";
             setTimeout(() => section.style.background = "#fff", 800);
             updateRow(id);
+        }
+
+        // --- DETECCIÓN EN TIEMPO REAL DESDE TEXTO ---
+        function detectConditionFromText(id) {
+            const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
+            const title = document.getElementById(`title-${id}`)?.value || '';
+            const conditionSelect = document.getElementById(`condition-${id}`);
+            
+            if (!conditionSelect) return;
+
+            const low = (title + ' ' + extraNotes).toLowerCase();
+            let detected = null;
+
+            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || low.includes('certified')) detected = 'Refurbished';
+            else if (low.includes('open box') || low.includes('caja abierta')) detected = 'Open Box';
+            else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) detected = 'Usado';
+            
+            // Solo cambiamos si detectamos algo claro para no sobreescribir selecciones manuales a "Nuevo" erróneamente
+            if (detected) {
+                conditionSelect.value = detected;
+            }
         }
 
         async function applyIA(id) {
@@ -1619,6 +1728,20 @@
                         if (t.includes('reloj') || t.includes('watch') || t.includes('audífonos') || t.includes('mouse')) w = 0.5;
                         weightInput.value = w;
                     }
+
+                    // Adivinar condición
+                    const conditionSelect = document.getElementById(`condition-${id}`);
+                    if (conditionSelect) {
+                        const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
+                        const low = (content.title + ' ' + titleVal + ' ' + extraNotes).toLowerCase();
+                        if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado')) conditionSelect.value = 'Refurbished';
+                        else if (low.includes('open box') || low.includes('caja abierta')) conditionSelect.value = 'Open Box';
+                        else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) conditionSelect.value = 'Usado';
+                        else conditionSelect.value = 'Nuevo';
+                    }
+
+                    // AUTO-DETECTAR SPECS TÉCNICAS (Para no perder información)
+                    autoExtractSpecs(id, true);
 
                     // Recalcular UI
                     updateRow(id);
@@ -1688,7 +1811,7 @@
 
                 // Procesador: para en pipe, coma o punto y coma
                 cpu: (
-                    cleanRaw.match(/(?:Processor|CPU|Procesador):\s*((?:Intel|AMD|Ryzen|Apple|Core)[^|.\n,;]{3,50})/i)?.[1]?.trim() ||
+                    cleanRaw.match(/(?:Processor|CPU|Procesador):\s*((?:Intel|AMD|Ryzen|Apple|Core)[^|\n,;]{3,50})/i)?.[1]?.trim() ||
                     cleanRaw.match(/(?:Intel|AMD|Ryzen|Core)\s*(?:Core\s*)?[i\d][^\s,|;]{1,20}/i)?.[0] || ""
                 ).split(/[|,;]/)[0].trim(),
 
@@ -1700,14 +1823,14 @@
 
                 // RAM: captura solo el número + GB/TB, para en pipe
                 ram: (
-                    cleanRaw.match(/(?:RAM Size|RAM|Memory|Memoria):\s*([^|.\n,;]{3,20})/i)?.[1] ||
+                    cleanRaw.match(/(?:RAM Size|RAM|Memory|Memoria):\s*([^|\n,;]{3,20})/i)?.[1] ||
                     cleanRaw.match(/(\d+\s*GB\s*(?:DDR\d|LPDDR\d|RAM|Memory))/i)?.[1] ||
                     cleanRaw.match(/\b(4|8|12|16|24|32|64)\s*GB\b/i)?.[0] || ""
                 ).split(/[|,;]/)[0].trim(),
 
                 // Disco: busca SSD Capacity / Storage primero, para en pipe
                 disk: (
-                    cleanRaw.match(/(?:SSD Capacity|SSD Size|Storage Capacity|Storage|Hard Drive Capacity|Disco|Capacidad SSD):\s*([^|.\n,;]{3,30})/i)?.[1] ||
+                    cleanRaw.match(/(?:SSD Capacity|SSD Size|Storage Capacity|Storage|Hard Drive Capacity|Disco|Capacidad SSD):\s*([^|\n,;]{3,30})/i)?.[1] ||
                     cleanRaw.match(/(\d+\s*(?:GB|TB)\s*(?:SSD|NVMe|HDD|Drive))/i)?.[1] ||
                     cleanRaw.match(/\b(128|256|512|1024|2048)\s*GB\b/i)?.[0] || ""
                 ).split(/[|,;]/)[0].trim(),
@@ -1834,7 +1957,7 @@
             if (!title) { alert('⚠️ Debes ingresar el TÍTULO del producto antes de copiar para WhatsApp.'); return; }
             if (priceUSD <= 0 || !cop || cop.includes('REQUERIDO')) { alert('⚠️ Debes ingresar el PRECIO USD válido antes de copiar para WhatsApp.'); return; }
 
-            const origin = window.location.origin;
+            const origin = "https://jmarintech.onrender.com";
             const link = `${origin}/go/${id}`;
 
             // Técnica Ninja: saltos de línea para ocultar el link pero dejar previsualización
@@ -1862,6 +1985,66 @@
                 document.execCommand('copy');
                 document.body.removeChild(ta);
                 alert("📋 ¡Texto copiado! Pégalo en WhatsApp.");
+            });
+        }
+
+        function copyToMarketplace(id) {
+            const titleInput = document.getElementById(`title-${id}`);
+            const sellingTitleInput = document.getElementById(`selling-title-${id}`);
+            const copEl = document.getElementById(`cop-${id}`);
+            const specsInput = document.getElementById(`specs-${id}`);
+            const benefitsInput = document.getElementById(`benefits-${id}`);
+            const badgeInput = document.getElementById(`badge-${id}`);
+
+            const title = (sellingTitleInput && sellingTitleInput.value.trim()) ? sellingTitleInput.value.trim() : (titleInput ? titleInput.value.trim() : '');
+            const rawCop = copEl ? copEl.innerText.replace(/[^0-9]/g, '') : '0';
+            const specs = specsInput ? specsInput.value.trim() : '';
+            const benefits = benefitsInput ? benefitsInput.value.trim() : '';
+            const badge = badgeInput ? badgeInput.value.trim() : '';
+
+            if (!title) { alert('⚠️ Ingresa un TÍTULO para generar la info de Marketplace.'); return; }
+
+            // Formatear especificaciones como bullet points si no lo están
+            const formattedSpecs = specs.split('\n').map(s => s.trim().startsWith('•') || s.trim().startsWith('-') || s.trim().startsWith('🔹') ? s.trim() : `🔹 ${s.trim()}`).filter(s => s !== '🔹').join('\n');
+            const formattedBenefits = benefits.split('\n').map(b => b.trim().startsWith('✅') || b.trim().startsWith('-') ? b.trim() : `✅ ${b.trim()}`).filter(b => b !== '✅').join('\n');
+
+            const isLaptop = title.toLowerCase().includes('laptop') || title.toLowerCase().includes('macbook') || title.toLowerCase().includes('notebook');
+            const brand = title.split(' ')[0].toLowerCase();
+
+            // Generar 11 etiquetas en español
+            const tagBase = ["ganga", "oferta", "tecnologia", "remate", "barato", "nuevo", "importado", "medellin", "envigado", "colombia"];
+            tagBase.push(brand);
+            const tags = tagBase.slice(0, 11).join(', ');
+
+            const description = 
+                `${title}\n\n` +
+                `¡Oportunidad Única! ${badge || 'Producto de Alta Calidad'}\n\n` +
+                `💎 ESPECIFICACIONES:\n${formattedSpecs || 'Ver descripción detallada en fotos.'}\n\n` +
+                (isLaptop ? `🔋 BATERÍA: Estado sobresaliente / Nueva\n\n` : '') +
+                `✨ CONDICIÓN:\n- Sin uso ni detalles (Nuevo)\n- Funcionamiento 100%\n- Equipo original\n\n` +
+                `📦 INCLUYE:\n${formattedBenefits || '- Caja original\n- Accesorios completos'}\n\n` +
+                `🎯 IDEAL PARA:\n- Trabajo profesional / Estudiantes\n- Uso exigente diario\n\n` +
+                `📍 Ubicación: Envigado / Medellín\n` +
+                `🚚 Envíos a todo el país.`;
+
+            const fullText = `--- INFO PARA FACEBOOK MARKETPLACE ---\n\n` +
+                             `TÍTULO: ${title.substring(0, 100)}\n` +
+                             `PRECIO: ${rawCop}\n` +
+                             `CATEGORÍA: Electrónica e informática\n` +
+                             `ESTADO: Nuevo\n` +
+                             `ETIQUETAS: ${tags}\n\n` +
+                             `--- DESCRIPCIÓN (COPIAR ABAJO) ---\n\n${description}`;
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                alert("📋 ¡INFO PARA MARKETPLACE COPIADA!\n\nSe ha copiado el Título, Precio, 11 Etiquetas y la Descripción en español.");
+            }).catch(err => {
+                const ta = document.createElement('textarea');
+                ta.value = fullText;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert("📋 Info de Marketplace copiada.");
             });
         }
 
@@ -1895,6 +2078,29 @@
                 }
             } catch (e) {
                 alert("Error al eliminar: " + (e.response?.data?.error || e.message));
+            }
+        }
+
+        // MÓDULO: STOCK VIRTUAL — actualiza sin recargar
+        async function updateStock(id, stockVal) {
+            const stock = parseInt(stockVal);
+            if (isNaN(stock)) return;
+            try {
+                const res = await axios.patch(API_URL + `/deals/${id}/stock`, { stock_virtual: stock }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                if (res.data.success) {
+                    const badge = document.getElementById(`stock-badge-${id}`);
+                    const inp = document.getElementById(`stock-input-${id}`);
+                    if (inp) inp.value = stock;
+                    if (badge) {
+                        const s = res.data.stock_status;
+                        badge.style.background = s === 'agotado' ? '#ef4444' : s === 'pocas_unidades' ? '#f97316' : '#22c55e';
+                        badge.textContent = s === 'agotado' ? '❌ Agotado' : s === 'pocas_unidades' ? '🔥 Pocas unidades' : '🟢 Disponible';
+                    }
+                }
+            } catch(e) {
+                alert('Error al actualizar stock: ' + (e.response?.data?.error || e.message));
             }
         }
 

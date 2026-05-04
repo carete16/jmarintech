@@ -298,20 +298,28 @@
         .card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .card-badge {
             position: absolute;
-            top: 14px;
-            right: 14px;
-            background: #0d9488;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 0.65rem;
+            top: 16px;
+            right: 16px;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.6rem;
             font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             z-index: 2;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .card-badge.marketing { background: #f59e0b; }
+        .card-badge.marketing { 
+            background: #ffffff;
+            border: 1.5px solid #0f172a; /* Borde negro para destacar sutilmente */
+            color: #0f172a;
+        }
 
         .card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
 
@@ -358,14 +366,14 @@
             background: #065f46;
             color: white;
             text-decoration: none;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 8px 16px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            font-weight: 800;
-            font-size: 0.85rem;
+            font-weight: 700;
+            font-size: 0.75rem;
             transition: 0.2s;
             margin-top: auto;
         }
@@ -507,6 +515,16 @@
         <div class="deals-grid" id="dealsGrid">
             <!-- Cargando... -->
         </div>
+
+        <!-- SECCIÓN MÓDULO: OFERTAS AGOTADAS (se muestra solo si hay datos) -->
+        <div id="agotados-section" style="display:none; margin-top:48px;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                <div style="height:2px; flex:1; background:linear-gradient(to right, #ef4444, transparent);"></div>
+                <h3 style="font-size:1rem; font-weight:800; color:#0f172a; white-space:nowrap;">🔥 Ofertas recientes (agotadas)</h3>
+                <div style="height:2px; flex:1; background:linear-gradient(to left, #ef4444, transparent);"></div>
+            </div>
+            <div class="deals-grid" id="agotadosGrid"></div>
+        </div>
     </main>
 
     <script>
@@ -523,6 +541,7 @@
                 const res = await fetch('/api/deals/express?t=' + Date.now());
                 allDeals = await res.json();
                 render(allDeals);
+                loadAgotados(); // Cargar sección de agotados en paralelo
 
                 // Autocomprobar si hay un ID en la URL para abrir el producto
                 const path = window.location.pathname;
@@ -538,6 +557,45 @@
                 console.error(err);
                 document.getElementById('dealsGrid').innerHTML = '<p>Error cargando ofertas.</p>';
             }
+        }
+
+        // MÓDULO: CARGAR OFERTAS AGOTADAS
+        async function loadAgotados() {
+            try {
+                const res = await fetch('/api/deals/agotados');
+                const items = await res.json();
+                if (!items.length) return;
+                const section = document.getElementById('agotados-section');
+                const grid = document.getElementById('agotadosGrid');
+                section.style.display = 'block';
+                const timeAgo = (dt) => {
+                    if (!dt) return '';
+                    const diff = Math.round((Date.now() - new Date(dt).getTime()) / 60000);
+                    if (diff < 60) return `hace ${diff} min`;
+                    if (diff < 1440) return `hace ${Math.round(diff/60)} horas`;
+                    return `hace ${Math.round(diff/1440)} días`;
+                };
+                grid.innerHTML = items.map(d => {
+                    const title = d.selling_title || d.title;
+                    const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Quiero reservar la próxima unidad de: ${title}\nPrecio: ${formatCOP(d.price_cop)}`)}`; 
+                    return `
+                    <div class="card" style="opacity:0.8;">
+                        <div class="card-img" style="position:relative;">
+                            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:3;display:flex;align-items:center;justify-content:center;">
+                                <span style="background:#ef4444;color:white;padding:6px 14px;border-radius:8px;font-weight:800;font-size:0.75rem;">❌ Agotado ${timeAgo(d.stock_updated_at)}</span>
+                            </div>
+                            <img src="/api/proxy-image?url=${encodeURIComponent(d.image)}" alt="${title}" onerror="this.src='https://placehold.co/400x300?text=Agotado'" style="filter:grayscale(60%);">
+                        </div>
+                        <div class="card-body">
+                            <div class="card-title">${title}</div>
+                            <div style="font-size:1.2rem; font-weight:900; color:#94a3b8; margin:8px 0;">${formatCOP(d.price_cop)}</div>
+                            <a href="${waLink}" target="_blank" class="wa-btn" style="background:#7c3aed; margin-top:auto;">
+                                Reservar próxima unidad <i class="fa-solid fa-bell"></i>
+                            </a>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) { /* silencioso */ }
         }
 
         function render(deals) {
@@ -568,6 +626,9 @@
                         ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu}</li>` : ''}
                         ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram}</li>` : ''}
                         ${specs.disk ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.disk}</li>` : ''}
+                        <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #475569;">${deal.product_condition || 'Nuevo'}</b></li>
+                        <li class="spec-item"><i class="fa-solid fa-plane-arrival"></i> Importación Directa USA</li>
+                        <li class="spec-item"><i class="fa-solid fa-circle-check"></i> Calidad Inspeccionada</li>
                     </ul>
                 `;
 
@@ -583,7 +644,7 @@
                 const ahorroPesos = marketRef ? (marketRef - deal.price_cop) : 0;
                 
                 // Cálculo dinámico del porcentaje de ahorro real (frente al mercado)
-                const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : (deal.savings || 0);
+                const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : 0;
 
                 // Si hay original_price (USD) en marketing, convertirlo a COP para mostrar
                 const originalPriceCOP = deal.original_price ? (deal.original_price * (deal.custom_dolar || 4000)) : null;
@@ -597,7 +658,7 @@
                         <div class="mt-1" style="font-size: 0.85rem;">
                             ${marketRef && ahorroPesos > 0 
                                 ? `<b style="color:#059669;">Ahorras ${formatCOP(ahorroPesos)} hoy</b>` 
-                                : (deal.savings ? `<b style="color:#059669;">Ahorras un ${deal.savings}%</b>` : '<span class="text-muted">Importación y entrega incluida.</span>')
+                                : ''
                             }
                         </div>
 
@@ -615,31 +676,41 @@
                 }
 
                 return `
-                <div class="card" onclick="openProductModal('${deal.id}')" style="cursor: pointer;">
-                    <div class="card-img">
-                        <!-- 3. BADGE (Arriba) -->
-                        ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-fire"></i> ${displayBadge}</div>` : `<div class="card-badge"><i class="fa-solid fa-check"></i> TODO INCLUIDO</div>`}
+                <div class="card" onclick="openProductModal('${deal.id}')" style="cursor: pointer; ${deal.stock_status === 'agotado' ? 'opacity:0.75;' : ''}">
+                    <div class="card-img" style="position:relative;">
+                        <!-- BADGE PRINCIPAL (marketing) -->
+                        ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-gem" style="font-size:0.55rem;"></i> ${displayBadge.replace(' 🚀', '').replace(' ✨', '').replace(' 💣', '')}</div>` : `<div class="card-badge"><i class="fa-solid fa-shield-halved" style="font-size:0.55rem;"></i> SELECCIÓN ELITE</div>`}
+                        <!-- BADGE DE STOCK / URGENCIA -->
+                        ${deal.stock_status === 'agotado' ? `
+                            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:3;display:flex;align-items:center;justify-content:center;border-radius:0;"><span style="background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-weight:800;font-size:0.85rem;">❌ Oferta agotada</span></div>` : ''}
+                        ${deal.stock_status === 'pocas_unidades' ? `<div style="position:absolute;bottom:10px;left:10px;background:#f97316;color:white;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:800;z-index:2;">🔥 ¡${deal.stock_virtual ?? ''} disponibles!</div>` : ''}
+                        ${!deal.stock_status || deal.stock_status === 'disponible' ? `<div style="position:absolute;bottom:10px;left:10px;background:#22c55e;color:white;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:800;z-index:2;">🟢 Disponible</div>` : ''}
                         <img src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" onerror="this.src='https://placehold.co/400x300?text=Sin+Imagen'">
                     </div>
                     <div class="card-body">
                         <!-- 1. TÍTULO (Venta vs Normal) -->
                         <div class="card-title">${displayTitle}</div>
-                        
-                        ${Object.keys(specs).length > 0 ? specsHtml : ''}
+                        ${specsHtml}
                         
                         <!-- 2. PRECIOS -->
                         ${priceHtml}
-                        
-                        <!-- 4. BENEFICIOS -->
-                        ${benefitsHtml}
-                        
-                        <div style="display: flex; gap: 8px;">
-                            <a href="${waLink}" target="_blank" class="wa-btn" style="flex: 1;" onclick="event.stopPropagation()">
-                                PEDIR POR WHATSAPP <i class="fa-brands fa-whatsapp"></i>
-                            </a>
-                            <button onclick="event.stopPropagation(); shareProduct('${deal.id}')" class="wa-btn" style="width: 50px; background: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                <i class="fa-solid fa-share-nodes"></i>
-                            </button>
+                        <!-- UX CONFIANZA -->
+                        <div style="font-size:0.65rem; color:#64748b; margin-top:6px; margin-bottom:10px;">
+                            🚀 Importado bajo pedido desde USA &nbsp;·&nbsp; ⏳ Entrega estimada: 10–15 días
+                        </div>
+                        <!-- 4. ACCIÓN -->
+                        ${deal.stock_status === 'agotado' ? `
+                            <div style="display:flex; gap:8px; margin-top:auto;">
+                                <a href="${waLink.replace('Me interesa','Quiero reservar próxima unidad de')}" target="_blank" class="wa-btn" style="flex:1; background:#7c3aed;" onclick="event.stopPropagation()">Reservar próxima unidad <i class="fa-solid fa-bell"></i></a>
+                            </div>` : deal.stock_status === 'pocas_unidades' ? `
+                            <div style="display:flex; gap:8px; margin-top:auto;">
+                                <a href="${waLink}" target="_blank" class="wa-btn" style="flex:1; background:#ea580c;" onclick="event.stopPropagation()">¡Comprar ahora! <i class="fa-brands fa-whatsapp"></i></a>
+                                <button onclick="event.stopPropagation(); shareProduct('${deal.id}')" class="wa-btn" style="width:50px; background:#64748b; padding:0; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>` : `
+                            <div style="display:flex; gap:8px; margin-top:auto;">
+                                <a href="${waLink}" target="_blank" class="wa-btn" style="flex:1;" onclick="event.stopPropagation()">Comprar bajo pedido <i class="fa-brands fa-whatsapp"></i></a>
+                                <button onclick="event.stopPropagation(); shareProduct('${deal.id}')" class="wa-btn" style="width:50px; background:#64748b; padding:0; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>`}
                         </div>
                     </div>
                 </div>
@@ -682,7 +753,7 @@
 
             const marketRef = deal.market_price_cop || specs.marketHighCOP || specs.marketMedianCOP || specs.marketPriceCOP || null;
             const ahorroPesos = marketRef ? (marketRef - deal.price_cop) : 0;
-            const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : (deal.savings || 0);
+            const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : 0;
 
             content.innerHTML = `
                 <div class="modal-left" style="padding: 20px;">
@@ -707,18 +778,15 @@
 
                     <div style="background: #f8fafc; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9; margin-bottom: 15px;">
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-                            ${specs.screen ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-desktop" style="color:#2563eb"></i> ${specs.screen}</div>` : ''}
-                            ${specs.cpu ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-microchip" style="color:#2563eb"></i> ${specs.cpu}</div>` : ''}
-                            ${specs.ram ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-memory" style="color:#2563eb"></i> ${specs.ram}</div>` : ''}
-                            ${specs.disk ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-hard-drive" style="color:#2563eb"></i> ${specs.disk}</div>` : ''}
+                            ${specs.screen ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-desktop" style="color:#64748b"></i> ${specs.screen}</div>` : ''}
+                            ${specs.cpu ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-microchip" style="color:#64748b"></i> ${specs.cpu}</div>` : ''}
+                            ${specs.ram ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-memory" style="color:#64748b"></i> ${specs.ram}</div>` : ''}
+                            ${specs.disk ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-hard-drive" style="color:#64748b"></i> ${specs.disk}</div>` : ''}
+                            <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-tag" style="color:#64748b"></i> Estado: ${deal.product_condition || 'Nuevo'}</div>
+                            <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-plane-arrival" style="color:#64748b"></i> Importación Directa USA</div>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        ${benefits.length > 0 ? benefits.slice(0,3).map(b => `<div class="benefit-item" style="font-size: 0.85rem; margin-bottom: 5px;"><i class="fa-solid fa-circle-check" style="color:#10b981"></i> ${b}</div>`).join('') : `
-                            <div class="benefit-item" style="font-size: 0.85rem;"><i class="fa-solid fa-shield-check" style="color:#10b981"></i> Garantía y soporte técnico</div>
-                        `}
-                    </div>
 
                     <div style="margin-top: auto; display: flex; gap: 10px;">
                         <a href="${waLink}" target="_blank" class="wa-btn" style="flex: 1; padding: 18px; font-size: 1.1rem; background: #065f46; box-shadow: 0 10px 20px -5px rgba(6, 95, 70, 0.3);">

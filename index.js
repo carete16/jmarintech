@@ -524,7 +524,7 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
       title: 'Cargando producto...', // Valor por defecto para evitar Modo Manual
       price: 0,
       image: '',
-      weight: 3.5,
+      weight: 5.0,
       categoria: 'Tecnología',
       isManualNotice: false // <-- DESACTIVADO: Siempre intentamos auto-datos
     };
@@ -579,6 +579,25 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
             if (imgMatch) imgUrl = imgMatch[0];
           }
           if (imgUrl) result.image = imgUrl;
+
+          // --- MOTOR DE DETECCIÓN DE ESTADO (MEJORADO) ---
+            const fullTextForCondition = (html + ' ' + result.title).toLowerCase();
+            let detectedCondition = 'Nuevo'; // Default
+            
+            if (fullTextForCondition.includes('refurbish') || 
+                fullTextForCondition.includes('renewed') || 
+                fullTextForCondition.includes('excellent') ||
+                fullTextForCondition.includes('certified') ||
+                fullTextForCondition.includes('90-day') ||
+                fullTextForCondition.includes('reacondicionado')) {
+                detectedCondition = 'Refurbished';
+            } else if (fullTextForCondition.includes('open box') || fullTextForCondition.includes('caja abierta')) {
+                detectedCondition = 'Open Box';
+            } else if (fullTextForCondition.includes('used') || fullTextForCondition.includes('usado') || fullTextForCondition.includes('prior use')) {
+                detectedCondition = 'Usado';
+            }
+            
+            result.condition = detectedCondition;
 
           if (result.title && result.price > 0) {
             result.isManualNotice = false;
@@ -738,16 +757,46 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
               .each((i, el) => { eSpecs += $(el).text().trim() + ' | '; });
             if (!eSpecs) eSpecs = $('.itemAttr').text().trim();
 
+            if (eSpecs) result.specs = eSpecs;
             if (eTitle && eTitle.length > 3 && !eTitle.includes('eBay Stores')) result.title = eTitle;
             if (ePrice > 0) { result.price = ePrice; result.isManualNotice = false; }
             if (eImage) result.image = eImage;
-            if (eSpecs) {
-              result.specs = eSpecs;
-              const specLow = (eSpecs + ' ' + eTitle).toLowerCase();
-              if (specLow.match(/laptop|notebook|portátil|computer|pc|processor|ram|ssd/)) result.categoria = 'Tecnología';
+
+            // EXTRAER CONDICIÓN ESPECÍFICA DE EBAY
+            const condSelectors = [
+                '.ux-labels-values__values .ux-textspans--BOLD',
+                '.ux-layout-section--condition .ux-textspans--BOLD',
+                '.x-item-condition-text .ux-textspans',
+                '.ux-icon-text__text .ux-textspans',
+                '.x-item-title__badgehighlight .ux-textspans',
+                '.x-item-title__badgehighlight',
+                '[data-testid="x-item-condition-text"]',
+                '.ux-section-condition-group',
+                '.ux-labels-values--condition'
+            ];
+            let eCondition = '';
+            for (const sel of condSelectors) {
+              const txt = $(sel).first().text().trim();
+              if (txt) { eCondition += txt + ' '; }
             }
 
-            console.log(`[EBAY-HTTP] Resultado: título=${eTitle.substring(0,40)} | precio=$${ePrice} | imagen=${eImage ? 'SÍ' : 'NO'}`);
+            const htmlLow = htmlContent.toLowerCase();
+            const low = (eCondition + ' ' + (eTitle || "") + ' ' + htmlLow).toLowerCase();
+            let detected = 'Nuevo';
+
+            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || low.includes('certified')) detected = 'Refurbished';
+            else if (low.includes('open box') || low.includes('caja abierta')) detected = 'Open Box';
+            else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) detected = 'Usado';
+            
+            result.condition = detected;
+
+            // SIEMPRE inyectar la condición al inicio de specs
+            const finalCondText = eCondition.trim() || detected;
+            result.specs = `Condition: ${finalCondText} | ` + (result.specs || '');
+            
+            if (low.match(/laptop|notebook|portátil|computer|pc|processor|ram|ssd/)) result.categoria = 'Tecnología';
+
+            console.log(`[EBAY-HTTP] Resultado: título=${eTitle.substring(0,40)} | precio=$${ePrice} | condición=${detected}`);
           } else {
             console.warn('[EBAY] No se pudo obtener HTML por ninguna vía.');
           }
@@ -837,7 +886,7 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
 
 // 6.5.4 CREAR BORRADOR MANUAL (ADMIN)
 app.post('/api/admin/express/manual-post', authMiddleware, async (req, res) => {
-  const { url, title, price, image, weight, store, category, gallery } = req.body;
+  const { url, title, price, image, weight, store, category, gallery, condition } = req.body;
   try {
     const { saveDeal } = require('./src/database/db');
     const id = 'exp_' + Date.now();
@@ -865,7 +914,8 @@ app.post('/api/admin/express/manual-post', authMiddleware, async (req, res) => {
       coupon: '',
       is_historic_low: 0,
       price_cop: 0,
-      original_specs: req.body.specs || ''
+      original_specs: req.body.specs || '',
+      product_condition: condition || 'Nuevo'
     };
     saveDeal(deal);
     res.json({ success: true, id });
@@ -901,11 +951,21 @@ app.post('/api/admin/express/delete', authMiddleware, (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 6.5.4 BORRAR TODO EL HISTORIAL DE PENDIENTES (ADMIN)
+app.post('/api/admin/express/clear-pending', authMiddleware, (req, res) => {
+  try {
+    const result = db.prepare("DELETE FROM published_deals WHERE status IN ('pending', 'pending_express')").run();
+    res.json({ success: true, count: result.changes });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/admin/express/approve', authMiddleware, async (req, res) => {
   const { id, price_cop, price_offer, title, weight, categoria, image, gallery,
           custom_dolar, custom_profit_percent, structured_specs,
           // Nuevos campos opcionales de venta
-          selling_title, original_price, savings, benefits, badge, marketPriceCOP } = req.body;
+          selling_title, original_price, savings, benefits, badge, marketPriceCOP, product_condition } = req.body;
   const pOffer = parseFloat(price_offer) || 0;
   if (pOffer <= 0) return res.status(400).json({ error: "Precio USD inválido" });
 
@@ -914,7 +974,7 @@ app.post('/api/admin/express/approve', authMiddleware, async (req, res) => {
         UPDATE published_deals 
         SET status = 'published', price_cop = ?, price_offer = ?, title = ?, weight = ?, categoria = ?, image = ?, gallery = ?, 
             custom_dolar = ?, custom_profit_percent = ?, structured_specs = ?, posted_at = CURRENT_TIMESTAMP,
-            selling_title = ?, original_price = ?, savings = ?, benefits = ?, badge = ?, market_price_cop = ?
+            selling_title = ?, original_price = ?, savings = ?, benefits = ?, badge = ?, market_price_cop = ?, product_condition = ?
         WHERE id = ?
     `).run(
       parseFloat(price_cop) || 0,
@@ -933,6 +993,7 @@ app.post('/api/admin/express/approve', authMiddleware, async (req, res) => {
       Array.isArray(benefits) ? JSON.stringify(benefits) : (benefits || null),
       badge || null,
       marketPriceCOP ? parseFloat(marketPriceCOP) : 0,
+      product_condition || 'Nuevo',
       id
     );
     res.json({ success: true });
@@ -943,7 +1004,7 @@ app.post('/api/admin/express/update', authMiddleware, async (req, res) => {
   const { id, price_cop, price_offer, title, weight, categoria, image, gallery,
           custom_dolar, custom_profit_percent, structured_specs,
           // Nuevos campos opcionales de venta
-          selling_title, original_price, savings, benefits, badge, marketPriceCOP } = req.body;
+          selling_title, original_price, savings, benefits, badge, marketPriceCOP, product_condition } = req.body;
   const pOffer = parseFloat(price_offer) || 0;
   if (pOffer <= 0) return res.status(400).json({ error: "Precio USD inválido" });
 
@@ -952,7 +1013,7 @@ app.post('/api/admin/express/update', authMiddleware, async (req, res) => {
         UPDATE published_deals 
         SET price_cop = ?, price_offer = ?, title = ?, weight = ?, categoria = ?, image = ?, gallery = ?,
             custom_dolar = ?, custom_profit_percent = ?, structured_specs = ?,
-            selling_title = ?, original_price = ?, savings = ?, benefits = ?, badge = ?, market_price_cop = ?
+            selling_title = ?, original_price = ?, savings = ?, benefits = ?, badge = ?, market_price_cop = ?, product_condition = ?
         WHERE id = ?
     `).run(
       parseFloat(price_cop) || 0,
@@ -971,6 +1032,7 @@ app.post('/api/admin/express/update', authMiddleware, async (req, res) => {
       Array.isArray(benefits) ? JSON.stringify(benefits) : (benefits || null),
       badge || null,
       marketPriceCOP ? parseFloat(marketPriceCOP) : 0,
+      product_condition || 'Nuevo',
       id
     );
     res.json({ success: true });
@@ -1014,6 +1076,48 @@ app.get('/api/proxy-image', async (req, res) => {
 });
 
 
+
+// ============================================================
+// MÓDULO: SISTEMA DE URGENCIA / STOCK VIRTUAL
+// Endpoints completamente nuevos, no alteran los existentes.
+// ============================================================
+
+// PATCH /api/deals/:id/stock  — Ajusta stock_virtual y recalcula stock_status
+app.patch('/api/deals/:id/stock', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  const { stock_virtual } = req.body;
+  if (stock_virtual === undefined || isNaN(parseInt(stock_virtual))) {
+    return res.status(400).json({ error: 'stock_virtual requerido y debe ser número' });
+  }
+  const stock = Math.max(0, parseInt(stock_virtual));
+  let status = 'disponible';
+  if (stock === 0) status = 'agotado';
+  else if (stock <= 3) status = 'pocas_unidades';
+
+  try {
+    const { db } = require('./src/database/db');
+    db.prepare(`UPDATE published_deals SET stock_virtual = ?, stock_status = ?, stock_updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(stock, status, id);
+    res.json({ success: true, stock_virtual: stock, stock_status: status });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/deals/agotados — Devuelve publicaciones agotadas para la sección inferior
+app.get('/api/deals/agotados', (req, res) => {
+  try {
+    const { db } = require('./src/database/db');
+    const rows = db.prepare(`
+      SELECT id, title, selling_title, image, price_cop, product_condition, stock_updated_at, structured_specs
+      FROM published_deals
+      WHERE status = 'published' AND stock_status = 'agotado'
+      ORDER BY stock_updated_at DESC LIMIT 20
+    `).all();
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 app.get('/api/admin/stats', authMiddleware, (req, res) => {
   try {
