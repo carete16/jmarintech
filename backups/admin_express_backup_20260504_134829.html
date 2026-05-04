@@ -430,9 +430,6 @@
                     <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="toggleConfig()">
                         <i class="fa-solid fa-gear me-1"></i> CONFIGURACIÓN
                     </button>
-                    <button id="master-sync-btn" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="masterSync()">
-                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> SINCRONIZAR TODO
-                    </button>
                 </div>
                 <div id="trm-date" class="text-muted" style="font-size: 0.65rem; font-weight: 700;">TRM última
                     actualización: <span id="trm-time">Cargando...</span></div>
@@ -679,8 +676,7 @@
                     title: data.title || '',
                     image: data.image || '',
                     store: data.store,
-                    specs: data.specs || '',
-                    condition: data.condition || 'Nuevo'
+                    specs: data.specs || ''
                 }, {
                     headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
                 });
@@ -1068,22 +1064,10 @@
                                 <div class="col-6">
                                     <label class="xsmall fw-bold text-muted">Estado del Producto</label>
                                     <select id="condition-${item.id}" class="form-select form-select-sm xsmall fw-bold" onchange="updateRow('${item.id}')">
-                                        ${(() => {
-                                            // Detección inteligente: si la DB dice Nuevo pero las specs/título dicen Refurbished, corregir en el render
-                                            const allText = ((item.product_condition || '') + ' ' + (item.original_specs || '') + ' ' + (item.title || '')).toLowerCase();
-                                            let smartCondition = item.product_condition || 'Nuevo';
-                                            if (smartCondition === 'Nuevo') {
-                                                if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) smartCondition = 'Refurbished';
-                                                else if (allText.includes('open box')) smartCondition = 'Open Box';
-                                                else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) smartCondition = 'Usado';
-                                            }
-                                            return `
-                                                <option value="Nuevo" ${smartCondition === 'Nuevo' ? 'selected' : ''}>Nuevo</option>
-                                                <option value="Refurbished" ${smartCondition === 'Refurbished' ? 'selected' : ''}>Refurbished (Reformado)</option>
-                                                <option value="Open Box" ${smartCondition === 'Open Box' ? 'selected' : ''}>Open Box</option>
-                                                <option value="Usado" ${smartCondition === 'Usado' ? 'selected' : ''}>Usado</option>
-                                            `;
-                                        })()}
+                                        <option value="Nuevo" ${item.product_condition === 'Nuevo' ? 'selected' : ''}>Nuevo</option>
+                                        <option value="Refurbished" ${item.product_condition === 'Refurbished' ? 'selected' : ''}>Refurbished (Reformado)</option>
+                                        <option value="Open Box" ${item.product_condition === 'Open Box' ? 'selected' : ''}>Open Box</option>
+                                        <option value="Usado" ${item.product_condition === 'Usado' ? 'selected' : ''}>Usado</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
@@ -1100,20 +1084,6 @@
                                         } catch(e) { return benefits; }
                                     })()}</textarea>
                                 </div>
-                                ${item.status === 'published' ? `<div class="col-12">
-                                    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:10px 12px;">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="xsmall fw-bold" style="color:#c2410c; margin:0;">🔥 Stock Virtual / Urgencia</label>
-                                            <span id="stock-badge-${item.id}" class="badge" style="font-size:0.6rem; background:${(item.stock_status||'disponible')==='agotado'?'#ef4444':(item.stock_status||'disponible')==='pocas_unidades'?'#f97316':'#22c55e'}; color:white;">${(item.stock_status||'disponible')==='agotado'?'❌ Agotado':(item.stock_status||'disponible')==='pocas_unidades'?'🔥 Pocas unidades':'🟢 Disponible'}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <input type="number" id="stock-input-${item.id}" value="${item.stock_virtual??5}" min="0" max="99" class="form-control form-control-sm" style="width:65px; font-weight:700;">
-                                            <button onclick="updateStock('${item.id}', document.getElementById('stock-input-${item.id}').value)" class="btn btn-sm btn-warning" style="font-size:0.65rem; padding:3px 8px;">Guardar</button>
-                                            <span class="xsmall text-muted">Rápido:</span>
-                                            ${[0,1,2,3,5].map(n=>`<button onclick="updateStock('${item.id}',${n})" class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;background:${n===0?'#ef4444':'#f97316'};color:white;border:none;border-radius:6px;">${n===0?'Ago':n}</button>`).join('')}
-                                        </div>
-                                    </div>
-                                </div>` : ''}
                             </div>
                         </div>
 
@@ -1228,8 +1198,6 @@
                     </div>
                 </div>`;
                 container.appendChild(card);
-                // Auto-detectar condición del producto al cargar la tarjeta
-                setTimeout(() => detectConditionFromText(item.id), 100);
                 // Auto-cargar precio de referencia Google Colombia
                 // YA NO AUTO-CARGAMOS (Para mayor velocidad)
                 /* if (item.title) {
@@ -1653,7 +1621,7 @@
                 condition: (() => {
                     const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
                     const low = (title + ' ' + (specs.condition || '') + ' ' + extraNotes).toLowerCase();
-                    if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent')) return 'Refurbished';
+                    if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado')) return 'Refurbished';
                     if (low.includes('open box') || low.includes('caja abierta')) return 'Open Box';
                     if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) return 'Usado';
                     return 'Nuevo';
@@ -1689,7 +1657,7 @@
             const low = (title + ' ' + extraNotes).toLowerCase();
             let detected = null;
 
-            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || low.includes('certified')) detected = 'Refurbished';
+            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado')) detected = 'Refurbished';
             else if (low.includes('open box') || low.includes('caja abierta')) detected = 'Open Box';
             else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) detected = 'Usado';
             
@@ -2084,29 +2052,6 @@
             }
         }
 
-        // MÓDULO: STOCK VIRTUAL — actualiza sin recargar
-        async function updateStock(id, stockVal) {
-            const stock = parseInt(stockVal);
-            if (isNaN(stock)) return;
-            try {
-                const res = await axios.patch(API_URL + `/deals/${id}/stock`, { stock_virtual: stock }, {
-                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-                });
-                if (res.data.success) {
-                    const badge = document.getElementById(`stock-badge-${id}`);
-                    const inp = document.getElementById(`stock-input-${id}`);
-                    if (inp) inp.value = stock;
-                    if (badge) {
-                        const s = res.data.stock_status;
-                        badge.style.background = s === 'agotado' ? '#ef4444' : s === 'pocas_unidades' ? '#f97316' : '#22c55e';
-                        badge.textContent = s === 'agotado' ? '❌ Agotado' : s === 'pocas_unidades' ? '🔥 Pocas unidades' : '🟢 Disponible';
-                    }
-                }
-            } catch(e) {
-                alert('Error al actualizar stock: ' + (e.response?.data?.error || e.message));
-            }
-        }
-
         async function searchGoogle(id) {
             const titleInput = document.getElementById(`title-${id}`);
             if (!titleInput || !titleInput.value.trim()) {
@@ -2185,28 +2130,6 @@
                 }
             } catch (e) {
                 alert("❌ Error al iniciar escaneo: " + (e.response?.data?.error || e.message));
-            }
-        }
-
-        async function masterSync() {
-            const btn = document.getElementById('master-sync-btn');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SINCRONIZANDO...';
-            btn.disabled = true;
-
-            try {
-                const res = await axios.post(API_URL + '/admin/push-all', {}, {
-                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-                });
-
-                if (res.data.success) {
-                    alert(`✅ SINCRONIZACIÓN MAESTRA COMPLETADA:\n\n💻 Código (GitHub): ${res.data.git}\n📦 Datos (Render): ${res.data.data}\n\nRender se reiniciará en 2-3 minutos con los nuevos cambios de código.`);
-                }
-            } catch (e) {
-                alert("❌ ERROR EN SINCRONIZACIÓN: " + (e.response?.data?.error || e.message));
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
             }
         }
 

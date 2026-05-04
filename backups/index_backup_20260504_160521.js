@@ -1077,48 +1077,6 @@ app.get('/api/proxy-image', async (req, res) => {
 
 
 
-// ============================================================
-// MÓDULO: SISTEMA DE URGENCIA / STOCK VIRTUAL
-// Endpoints completamente nuevos, no alteran los existentes.
-// ============================================================
-
-// PATCH /api/deals/:id/stock  — Ajusta stock_virtual y recalcula stock_status
-app.patch('/api/deals/:id/stock', authMiddleware, (req, res) => {
-  const { id } = req.params;
-  const { stock_virtual } = req.body;
-  if (stock_virtual === undefined || isNaN(parseInt(stock_virtual))) {
-    return res.status(400).json({ error: 'stock_virtual requerido y debe ser número' });
-  }
-  const stock = Math.max(0, parseInt(stock_virtual));
-  let status = 'disponible';
-  if (stock === 0) status = 'agotado';
-  else if (stock <= 3) status = 'pocas_unidades';
-
-  try {
-    const { db } = require('./src/database/db');
-    db.prepare(`UPDATE published_deals SET stock_virtual = ?, stock_status = ?, stock_updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(stock, status, id);
-    res.json({ success: true, stock_virtual: stock, stock_status: status });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET /api/deals/agotados — Devuelve publicaciones agotadas para la sección inferior
-app.get('/api/deals/agotados', (req, res) => {
-  try {
-    const { db } = require('./src/database/db');
-    const rows = db.prepare(`
-      SELECT id, title, selling_title, image, price_cop, product_condition, stock_updated_at, structured_specs
-      FROM published_deals
-      WHERE status = 'published' AND stock_status = 'agotado'
-      ORDER BY stock_updated_at DESC LIMIT 20
-    `).all();
-    res.json(rows);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 app.get('/api/admin/stats', authMiddleware, (req, res) => {
   try {
     const totalDeals = db.prepare('SELECT COUNT(*) as count FROM published_deals').get().count;
@@ -1435,52 +1393,6 @@ app.post('/api/admin/purge', authMiddleware, (req, res) => {
     const deleted = db.prepare("DELETE FROM published_deals WHERE image LIKE '%placehold%' OR title IS NULL").run();
     res.json({ success: true, count: deleted.changes });
   } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// 9. BOTÓN MAESTRO: PUSH GITHUB + SYNC DATA RENDER
-app.post('/api/admin/push-all', authMiddleware, async (req, res) => {
-  const { exec } = require('child_process');
-  const CloudSync = require('./src/utils/CloudSync');
-  
-  console.log('🚀 Iniciando Sincronización Maestra (GitHub + Render)...');
-
-  // 1. Git Push (Código)
-  exec('git add . && git commit -m "update: sincronización desde admin" && git push origin main', async (error, stdout, stderr) => {
-    if (error) {
-      console.error(`❌ Error en Git Push: ${error.message}`);
-      // Continuamos con el sync de data aunque falle el de código
-    }
-    
-    // 2. Sync Data (Productos)
-    try {
-      const deals = db.prepare("SELECT * FROM published_deals WHERE status = 'published'").all();
-      console.log(`📦 Sincronizando ${deals.length} productos con Render...`);
-      
-      const RENDER_URL = 'https://jmarintech.onrender.com';
-      const ADMIN_PASSWORD = 'Masbarato2026';
-      const axios = require('axios');
-
-      let successCount = 0;
-      for (const deal of deals) {
-        try {
-          await axios.post(`${RENDER_URL}/api/admin/sync`, { deals: [deal] }, {
-            headers: { 'x-admin-password': ADMIN_PASSWORD },
-            timeout: 10000
-          });
-          successCount++;
-        } catch (err) { /* ignore individual errors */ }
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Sincronización completada', 
-        git: error ? 'falló' : 'exitoso',
-        data: `${successCount}/${deals.length} productos sincronizados`
-      });
-    } catch (e) {
-      res.status(500).json({ error: e.message });
-    }
-  });
 });
 
 // --- INICIO PROFESIONAL ---

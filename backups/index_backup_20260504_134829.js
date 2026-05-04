@@ -580,26 +580,13 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
           }
           if (imgUrl) result.image = imgUrl;
 
-          // --- MOTOR DE DETECCIÓN DE ESTADO (MEJORADO) ---
-            const fullTextForCondition = (html + ' ' + result.title).toLowerCase();
-            let detectedCondition = 'Nuevo'; // Default
-            
-            if (fullTextForCondition.includes('refurbish') || 
-                fullTextForCondition.includes('renewed') || 
-                fullTextForCondition.includes('excellent') ||
-                fullTextForCondition.includes('certified') ||
-                fullTextForCondition.includes('90-day') ||
-                fullTextForCondition.includes('reacondicionado')) {
-                detectedCondition = 'Refurbished';
-            } else if (fullTextForCondition.includes('open box') || fullTextForCondition.includes('caja abierta')) {
-                detectedCondition = 'Open Box';
-            } else if (fullTextForCondition.includes('used') || fullTextForCondition.includes('usado') || fullTextForCondition.includes('prior use')) {
-                detectedCondition = 'Usado';
-            }
-            
-            result.condition = detectedCondition;
-
           if (result.title && result.price > 0) {
+            const lowTitle = result.title.toLowerCase();
+            if (lowTitle.match(/renewed|refurbished|reformado|renovado/)) result.condition = 'Refurbished';
+            else if (lowTitle.match(/open box|caja abierta/)) result.condition = 'Open Box';
+            else if (lowTitle.match(/used|usado|pre-owned/)) result.condition = 'Usado';
+            else result.condition = 'Nuevo';
+            
             result.isManualNotice = false;
             break;
           }
@@ -757,46 +744,46 @@ app.post('/api/admin/express/analyze', authMiddleware, async (req, res) => {
               .each((i, el) => { eSpecs += $(el).text().trim() + ' | '; });
             if (!eSpecs) eSpecs = $('.itemAttr').text().trim();
 
-            if (eSpecs) result.specs = eSpecs;
             if (eTitle && eTitle.length > 3 && !eTitle.includes('eBay Stores')) result.title = eTitle;
             if (ePrice > 0) { result.price = ePrice; result.isManualNotice = false; }
             if (eImage) result.image = eImage;
-
-            // EXTRAER CONDICIÓN ESPECÍFICA DE EBAY
-            const condSelectors = [
-                '.ux-labels-values__values .ux-textspans--BOLD',
+            if (eSpecs) {
+              result.specs = eSpecs;
+              
+              // EXTRAER CONDICIÓN ESPECÍFICA DE EBAY
+              let eCondition = '';
+              const condSelectors = [
                 '.ux-layout-section--condition .ux-textspans--BOLD',
                 '.x-item-condition-text .ux-textspans',
-                '.ux-icon-text__text .ux-textspans',
                 '.x-item-title__badgehighlight .ux-textspans',
                 '.x-item-title__badgehighlight',
                 '[data-testid="x-item-condition-text"]',
                 '.ux-section-condition-group',
                 '.ux-labels-values--condition'
-            ];
-            let eCondition = '';
-            for (const sel of condSelectors) {
-              const txt = $(sel).first().text().trim();
-              if (txt) { eCondition += txt + ' '; }
+              ];
+              for (const sel of condSelectors) {
+                const txt = $(sel).first().text().trim();
+                if (txt) { eCondition += txt + ' '; }
+              }
+
+              if (eCondition) result.specs = `Condition: ${eCondition.trim()} | ` + result.specs;
+
+              // Failsafe: Búsqueda profunda en TODO el código HTML (sin límite de caracteres)
+              const htmlLow = htmlContent.toLowerCase();
+              if (!result.specs.toLowerCase().includes('refurbish') && (htmlLow.includes('refurbish') || htmlLow.includes('renewed') || htmlLow.includes('certified refurbished'))) {
+                result.specs = "Condition: Refurbished | " + result.specs;
+              }
+
+              const specLow = (result.specs + ' ' + eTitle + ' ' + htmlLow).toLowerCase();
+              if (specLow.match(/laptop|notebook|portátil|computer|pc|processor|ram|ssd/)) result.categoria = 'Tecnología';
+              
+              if (specLow.match(/refurbish|reformado|renovado|certified|renewed|90-day|reacondicionado/)) result.condition = 'Refurbished';
+              else if (specLow.match(/open box|caja abierta/)) result.condition = 'Open Box';
+              else if (specLow.match(/used|usado|pre-owned|prior use/)) result.condition = 'Usado';
+              else result.condition = 'Nuevo';
             }
 
-            const htmlLow = htmlContent.toLowerCase();
-            const low = (eCondition + ' ' + (eTitle || "") + ' ' + htmlLow).toLowerCase();
-            let detected = 'Nuevo';
-
-            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || low.includes('certified')) detected = 'Refurbished';
-            else if (low.includes('open box') || low.includes('caja abierta')) detected = 'Open Box';
-            else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) detected = 'Usado';
-            
-            result.condition = detected;
-
-            // SIEMPRE inyectar la condición al inicio de specs
-            const finalCondText = eCondition.trim() || detected;
-            result.specs = `Condition: ${finalCondText} | ` + (result.specs || '');
-            
-            if (low.match(/laptop|notebook|portátil|computer|pc|processor|ram|ssd/)) result.categoria = 'Tecnología';
-
-            console.log(`[EBAY-HTTP] Resultado: título=${eTitle.substring(0,40)} | precio=$${ePrice} | condición=${detected}`);
+            console.log(`[EBAY-HTTP] Resultado: título=${eTitle.substring(0,40)} | precio=$${ePrice} | imagen=${eImage ? 'SÍ' : 'NO'}`);
           } else {
             console.warn('[EBAY] No se pudo obtener HTML por ninguna vía.');
           }
@@ -1076,48 +1063,6 @@ app.get('/api/proxy-image', async (req, res) => {
 });
 
 
-
-// ============================================================
-// MÓDULO: SISTEMA DE URGENCIA / STOCK VIRTUAL
-// Endpoints completamente nuevos, no alteran los existentes.
-// ============================================================
-
-// PATCH /api/deals/:id/stock  — Ajusta stock_virtual y recalcula stock_status
-app.patch('/api/deals/:id/stock', authMiddleware, (req, res) => {
-  const { id } = req.params;
-  const { stock_virtual } = req.body;
-  if (stock_virtual === undefined || isNaN(parseInt(stock_virtual))) {
-    return res.status(400).json({ error: 'stock_virtual requerido y debe ser número' });
-  }
-  const stock = Math.max(0, parseInt(stock_virtual));
-  let status = 'disponible';
-  if (stock === 0) status = 'agotado';
-  else if (stock <= 3) status = 'pocas_unidades';
-
-  try {
-    const { db } = require('./src/database/db');
-    db.prepare(`UPDATE published_deals SET stock_virtual = ?, stock_status = ?, stock_updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(stock, status, id);
-    res.json({ success: true, stock_virtual: stock, stock_status: status });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET /api/deals/agotados — Devuelve publicaciones agotadas para la sección inferior
-app.get('/api/deals/agotados', (req, res) => {
-  try {
-    const { db } = require('./src/database/db');
-    const rows = db.prepare(`
-      SELECT id, title, selling_title, image, price_cop, product_condition, stock_updated_at, structured_specs
-      FROM published_deals
-      WHERE status = 'published' AND stock_status = 'agotado'
-      ORDER BY stock_updated_at DESC LIMIT 20
-    `).all();
-    res.json(rows);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
 app.get('/api/admin/stats', authMiddleware, (req, res) => {
   try {
@@ -1435,52 +1380,6 @@ app.post('/api/admin/purge', authMiddleware, (req, res) => {
     const deleted = db.prepare("DELETE FROM published_deals WHERE image LIKE '%placehold%' OR title IS NULL").run();
     res.json({ success: true, count: deleted.changes });
   } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// 9. BOTÓN MAESTRO: PUSH GITHUB + SYNC DATA RENDER
-app.post('/api/admin/push-all', authMiddleware, async (req, res) => {
-  const { exec } = require('child_process');
-  const CloudSync = require('./src/utils/CloudSync');
-  
-  console.log('🚀 Iniciando Sincronización Maestra (GitHub + Render)...');
-
-  // 1. Git Push (Código)
-  exec('git add . && git commit -m "update: sincronización desde admin" && git push origin main', async (error, stdout, stderr) => {
-    if (error) {
-      console.error(`❌ Error en Git Push: ${error.message}`);
-      // Continuamos con el sync de data aunque falle el de código
-    }
-    
-    // 2. Sync Data (Productos)
-    try {
-      const deals = db.prepare("SELECT * FROM published_deals WHERE status = 'published'").all();
-      console.log(`📦 Sincronizando ${deals.length} productos con Render...`);
-      
-      const RENDER_URL = 'https://jmarintech.onrender.com';
-      const ADMIN_PASSWORD = 'Masbarato2026';
-      const axios = require('axios');
-
-      let successCount = 0;
-      for (const deal of deals) {
-        try {
-          await axios.post(`${RENDER_URL}/api/admin/sync`, { deals: [deal] }, {
-            headers: { 'x-admin-password': ADMIN_PASSWORD },
-            timeout: 10000
-          });
-          successCount++;
-        } catch (err) { /* ignore individual errors */ }
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Sincronización completada', 
-        git: error ? 'falló' : 'exitoso',
-        data: `${successCount}/${deals.length} productos sincronizados`
-      });
-    } catch (e) {
-      res.status(500).json({ error: e.message });
-    }
-  });
 });
 
 // --- INICIO PROFESIONAL ---

@@ -430,9 +430,6 @@
                     <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="toggleConfig()">
                         <i class="fa-solid fa-gear me-1"></i> CONFIGURACIÓN
                     </button>
-                    <button id="master-sync-btn" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="masterSync()">
-                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> SINCRONIZAR TODO
-                    </button>
                 </div>
                 <div id="trm-date" class="text-muted" style="font-size: 0.65rem; font-weight: 700;">TRM última
                     actualización: <span id="trm-time">Cargando...</span></div>
@@ -1100,20 +1097,6 @@
                                         } catch(e) { return benefits; }
                                     })()}</textarea>
                                 </div>
-                                ${item.status === 'published' ? `<div class="col-12">
-                                    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:10px 12px;">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="xsmall fw-bold" style="color:#c2410c; margin:0;">🔥 Stock Virtual / Urgencia</label>
-                                            <span id="stock-badge-${item.id}" class="badge" style="font-size:0.6rem; background:${(item.stock_status||'disponible')==='agotado'?'#ef4444':(item.stock_status||'disponible')==='pocas_unidades'?'#f97316':'#22c55e'}; color:white;">${(item.stock_status||'disponible')==='agotado'?'❌ Agotado':(item.stock_status||'disponible')==='pocas_unidades'?'🔥 Pocas unidades':'🟢 Disponible'}</span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                            <input type="number" id="stock-input-${item.id}" value="${item.stock_virtual??5}" min="0" max="99" class="form-control form-control-sm" style="width:65px; font-weight:700;">
-                                            <button onclick="updateStock('${item.id}', document.getElementById('stock-input-${item.id}').value)" class="btn btn-sm btn-warning" style="font-size:0.65rem; padding:3px 8px;">Guardar</button>
-                                            <span class="xsmall text-muted">Rápido:</span>
-                                            ${[0,1,2,3,5].map(n=>`<button onclick="updateStock('${item.id}',${n})" class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;background:${n===0?'#ef4444':'#f97316'};color:white;border:none;border-radius:6px;">${n===0?'Ago':n}</button>`).join('')}
-                                        </div>
-                                    </div>
-                                </div>` : ''}
                             </div>
                         </div>
 
@@ -2084,29 +2067,6 @@
             }
         }
 
-        // MÓDULO: STOCK VIRTUAL — actualiza sin recargar
-        async function updateStock(id, stockVal) {
-            const stock = parseInt(stockVal);
-            if (isNaN(stock)) return;
-            try {
-                const res = await axios.patch(API_URL + `/deals/${id}/stock`, { stock_virtual: stock }, {
-                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-                });
-                if (res.data.success) {
-                    const badge = document.getElementById(`stock-badge-${id}`);
-                    const inp = document.getElementById(`stock-input-${id}`);
-                    if (inp) inp.value = stock;
-                    if (badge) {
-                        const s = res.data.stock_status;
-                        badge.style.background = s === 'agotado' ? '#ef4444' : s === 'pocas_unidades' ? '#f97316' : '#22c55e';
-                        badge.textContent = s === 'agotado' ? '❌ Agotado' : s === 'pocas_unidades' ? '🔥 Pocas unidades' : '🟢 Disponible';
-                    }
-                }
-            } catch(e) {
-                alert('Error al actualizar stock: ' + (e.response?.data?.error || e.message));
-            }
-        }
-
         async function searchGoogle(id) {
             const titleInput = document.getElementById(`title-${id}`);
             if (!titleInput || !titleInput.value.trim()) {
@@ -2185,28 +2145,6 @@
                 }
             } catch (e) {
                 alert("❌ Error al iniciar escaneo: " + (e.response?.data?.error || e.message));
-            }
-        }
-
-        async function masterSync() {
-            const btn = document.getElementById('master-sync-btn');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SINCRONIZANDO...';
-            btn.disabled = true;
-
-            try {
-                const res = await axios.post(API_URL + '/admin/push-all', {}, {
-                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-                });
-
-                if (res.data.success) {
-                    alert(`✅ SINCRONIZACIÓN MAESTRA COMPLETADA:\n\n💻 Código (GitHub): ${res.data.git}\n📦 Datos (Render): ${res.data.data}\n\nRender se reiniciará en 2-3 minutos con los nuevos cambios de código.`);
-                }
-            } catch (e) {
-                alert("❌ ERROR EN SINCRONIZACIÓN: " + (e.response?.data?.error || e.message));
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
             }
         }
 
