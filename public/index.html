@@ -95,10 +95,15 @@
             letter-spacing: 0.05em;
             margin-bottom: 6px;
         }
-        .agent-text {
             font-size: 0.72rem;
             line-height: 1.4;
             color: #64748b;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         }
 
         /* MAIN CONTENT */
@@ -577,7 +582,8 @@
                 };
                 grid.innerHTML = items.map(d => {
                     const title = d.selling_title || d.title;
-                    const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Quiero reservar la próxima unidad de: ${title}\nPrecio: ${formatCOP(d.price_cop)}`)}`; 
+                    const publicUrl = 'https://jmarintech.onrender.com';
+                    const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Quiero reservar la próxima unidad de: ${title}\nPrecio: ${formatCOP(d.price_cop)}\nLink: ${publicUrl}/p/${d.id}`)}`; 
                     return `
                     <div class="card" style="opacity:0.8;">
                         <div class="card-img" style="position:relative;">
@@ -608,7 +614,8 @@
             grid.innerHTML = deals.map(deal => {
                 const priceStr = formatCOP(deal.price_cop);
                 const displayTitle = deal.selling_title || deal.title;
-                const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/p/${deal.id}`)}`;
+                const publicUrl = 'https://jmarintech.onrender.com';
+                const waLink = `https://wa.me/573012722472?text=${encodeURIComponent(`Hola! Me interesa este producto: ${deal.title}\nPrecio: ${priceStr}\nLink: ${publicUrl}/go/${deal.id}`)}`;
                 
                 let specs = {};
                 try { 
@@ -682,9 +689,12 @@
                         ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-gem" style="font-size:0.55rem;"></i> ${displayBadge.replace(' 🚀', '').replace(' ✨', '').replace(' 💣', '')}</div>` : `<div class="card-badge"><i class="fa-solid fa-shield-halved" style="font-size:0.55rem;"></i> SELECCIÓN ELITE</div>`}
                         <!-- BADGE DE STOCK / URGENCIA -->
                         ${deal.stock_status === 'agotado' ? `
-                            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:3;display:flex;align-items:center;justify-content:center;border-radius:0;"><span style="background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-weight:800;font-size:0.85rem;">❌ Oferta agotada</span></div>` : ''}
-                        ${deal.stock_status === 'pocas_unidades' ? `<div style="position:absolute;bottom:10px;left:10px;background:#f97316;color:white;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:800;z-index:2;">🔥 ¡${deal.stock_virtual ?? ''} disponibles!</div>` : ''}
-                        ${!deal.stock_status || deal.stock_status === 'disponible' ? `<div style="position:absolute;bottom:10px;left:10px;background:#22c55e;color:white;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:800;z-index:2;">🟢 Disponible</div>` : ''}
+                            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:3;display:flex;align-items:center;justify-content:center;border-radius:0;"><span style="background:#ef4444;color:white;padding:10px 20px;border-radius:8px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">🚫 AGOTADO 🚫</span></div>` : ''}
+                        ${deal.stock_status === 'pocas_unidades' ? `
+                            <div style="position:absolute;bottom:10px;left:10px;background:linear-gradient(45deg, #f97316, #ef4444);color:white;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:900;z-index:2;box-shadow:0 4px 10px rgba(0,0,0,0.3);animation:pulse 1.5s infinite;">
+                                ${deal.stock_virtual == 1 ? '🚨 ¡SOLO 1 DISPONIBLE!' : `🔥 ¡SOLO ${deal.stock_virtual} DISPONIBLES!`}
+                            </div>` : ''}
+                        ${!deal.stock_status || deal.stock_status === 'disponible' ? `<div style="position:absolute;bottom:10px;left:10px;background:#22c55e;color:white;padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:800;z-index:2;">🟢 Disponible bajo pedido</div>` : ''}
                         <img src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" onerror="this.src='https://placehold.co/400x300?text=Sin+Imagen'">
                     </div>
                     <div class="card-body">
@@ -743,7 +753,8 @@
             
             const displayTitle = deal.selling_title || deal.title;
             const priceStr = formatCOP(deal.price_cop);
-            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${window.location.origin}/p/${deal.id}`)}`;
+            const publicUrl = 'https://jmarintech.onrender.com';
+            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${publicUrl}/p/${deal.id}`)}`;
             
             let specs = {};
             try { specs = typeof deal.structured_specs === 'string' ? JSON.parse(deal.structured_specs) : (deal.structured_specs || {}); } catch(e) {}
@@ -809,7 +820,8 @@
 
             const title = deal.selling_title || deal.title;
             const price = formatCOP(deal.price_cop);
-            const url = `${window.location.origin}/p/${deal.id}`;
+            const publicUrl = 'https://jmarintech.onrender.com';
+            const url = `${publicUrl}/p/${deal.id}`;
             const text = `💎 ¡Selección Exclusiva en JMARIN TECH!\n\n📦 ${title}\n💰 Precio: ${price}\n\nVer detalles y fotos aquí: ${url}`;
 
             // Crear el menú personalizado

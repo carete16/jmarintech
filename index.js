@@ -1484,6 +1484,7 @@ app.post('/api/admin/push-all', authMiddleware, async (req, res) => {
 });
 
 // --- INICIO PROFESIONAL ---
+// FORCE_SYNC_MARKETING_V2: 2026-05-04
 const startServer = async () => {
     // --- TEST DE INTEGRIDAD PROFESIONAL ---
     try {
