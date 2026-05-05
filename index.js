@@ -1450,9 +1450,13 @@ app.post('/api/admin/push-all', authMiddleware, async (req, res) => {
 
   // 1. Git Push (Código)
   exec('git add . && git commit -m "update: sincronización desde admin" && git push origin main', async (error, stdout, stderr) => {
+    let gitStatus = 'exitoso';
     if (error) {
-      console.error(`❌ Error en Git Push: ${error.message}`);
-      // Continuamos con el sync de data aunque falle el de código
+      // Si el error no es simplemente que el árbol está limpio, marcar como fallo
+      if (!stdout.includes('nothing to commit') && !stderr.includes('nothing to commit')) {
+        console.error(`❌ Error real en Git Push: ${error.message}`);
+        gitStatus = 'falló';
+      }
     }
     
     // 2. Sync Data (Productos)
@@ -1478,7 +1482,7 @@ app.post('/api/admin/push-all', authMiddleware, async (req, res) => {
       res.json({ 
         success: true, 
         message: 'Sincronización completada', 
-        git: error ? 'falló' : 'exitoso',
+        git: gitStatus,
         data: `${successCount}/${deals.length} productos sincronizados`
       });
     } catch (e) {
