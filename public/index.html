@@ -687,7 +687,7 @@
                 <div class="card" onclick="openProductModal('${deal.id}')" style="cursor: pointer; ${deal.stock_status === 'agotado' ? 'opacity:0.75;' : ''}">
                     <div class="card-img" style="position:relative;">
                         <!-- BADGE PRINCIPAL (marketing) -->
-                        ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-gem" style="font-size:0.55rem;"></i> ${displayBadge.replace(' 🚀', '').replace(' ✨', '').replace(' 💣', '')}</div>` : `<div class="card-badge"><i class="fa-solid fa-shield-halved" style="font-size:0.55rem;"></i> SELECCIÓN ELITE</div>`}
+                        ${displayBadge ? `<div class="card-badge marketing"><i class="fa-solid fa-shield-halved" style="font-size:0.55rem;"></i> ${displayBadge.replace(' 🚀', '').replace(' ✨', '').replace(' 💣', '')}</div>` : `<div class="card-badge"><i class="fa-solid fa-shield-halved" style="font-size:0.55rem;"></i> SELECCIÓN ELITE</div>`}
                         <!-- BADGE DE STOCK / URGENCIA -->
                         ${deal.stock_status === 'agotado' ? `
                             <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:3;display:flex;align-items:center;justify-content:center;border-radius:0;"><span style="background:#ef4444;color:white;padding:10px 20px;border-radius:8px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">🚫 AGOTADO 🚫</span></div>` : ''}
