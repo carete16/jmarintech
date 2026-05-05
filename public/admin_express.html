@@ -679,7 +679,7 @@
                     title: data.title || '',
                     image: data.image || '',
                     store: data.store,
-                    specs: data.specs || '',
+                    specs: `ESTADO: ${data.condition || 'Nuevo'} | ` + (data.specs || ''),
                     condition: data.condition || 'Nuevo'
                 }, {
                     headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
@@ -1663,11 +1663,21 @@
                 benefits: benefitsArr.slice(0, 5),
                 badge,
                 condition: (() => {
+                    const currentVal = document.getElementById(`condition-${id}`)?.value;
+                    // Si el usuario ya seleccionó algo que no es "Nuevo", respetamos su decisión
+                    if (currentVal && currentVal !== 'Nuevo') return currentVal;
+
                     const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
                     const low = (title + ' ' + (specs.condition || '') + ' ' + extraNotes).toLowerCase();
-                    if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent')) return 'Refurbished';
-                    if (low.includes('open box') || low.includes('caja abierta')) return 'Open Box';
-                    if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) return 'Usado';
+                    
+                    if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || 
+                        low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || 
+                        low.includes('excellent') || low.includes('very good') || low.includes('good') || 
+                        low.includes('grade a') || low.includes('certified') || low.includes('pre-owned')) return 'Refurbished';
+                    
+                    if (low.includes('open box') || low.includes('caja abierta') || low.includes('unused')) return 'Open Box';
+                    if (low.includes('used') || low.includes('usado') || low.includes('fair')) return 'Usado';
+                    
                     return 'Nuevo';
                 })()
             };
@@ -2018,7 +2028,6 @@
             const copEl = document.getElementById(`cop-${id}`);
             const specsStr = document.getElementById(`structured-specs-${id}`)?.value || '{}';
             const originalSpecs = document.getElementById(`specs-${id}`)?.value || '';
-            const benefitsInput = document.getElementById(`benefits-${id}`);
             
             let specs = {};
             try { specs = JSON.parse(specsStr); } catch(e) {}
@@ -2028,17 +2037,19 @@
             
             if (!fullTitle) { alert('⚠️ Ingresa un TÍTULO para generar la info de Marketplace.'); return; }
 
-            // Extracción inteligente para el template premium
-            const chip = specs.cpu || "Chip Apple M1 / Intel Core";
-            const ram = specs.ram || "16 GB de memoria RAM";
-            const ssd = specs.disk || "512 GB SSD (almacenamiento rápido)";
-            const screen = specs.screen ? `Pantalla de ${specs.screen}` : "Pantalla Retina";
+            // --- EXTRACCIÓN ÉLITE DE ESPECIFICACIONES ---
+            const chip = specs.cpu || specs.processor || "Procesador de alto rendimiento";
+            const ram = specs.ram || "Memoria RAM fluida";
+            const ssd = specs.disk || specs.storage || "SSD de alta velocidad";
+            const screen = specs.screen ? `Pantalla ${specs.screen}` : "Pantalla de alta resolución";
+            const gpu = specs.gpu ? ` • Gráficos: ${specs.gpu}` : "";
+            const ports = specs.ports ? ` • Puertos: ${specs.ports}` : "";
             
-            // Intentar detectar batería si está en el texto original
+            // Detección de Batería (Smart)
             const batteryMatch = originalSpecs.match(/(\d+)%\s*(?:capacity|capacidad|health)/i);
             const cycleMatch = originalSpecs.match(/(\d+)\s*(?:cycles|ciclos)/i);
             const batteryCap = batteryMatch ? batteryMatch[1] : "95+";
-            const batteryCycles = cycleMatch ? cycleMatch[1] : "Bajos";
+            const batteryCycles = cycleMatch ? cycleMatch[1] : "Mínimos";
 
             const brand = fullTitle.split(' ')[0].toLowerCase();
             const tagBase = ["ganga", "oferta", "tecnologia", "remate", "barato", "nuevo", "importado", "medellin", "envigado", "colombia"];
@@ -2046,30 +2057,35 @@
             const tags = tagBase.slice(0, 11).join(', ');
 
             const isMac = fullTitle.toLowerCase().includes('macbook') || fullTitle.toLowerCase().includes('apple');
+            const isHardware = fullTitle.toLowerCase().match(/rtx|gtx|gpu|graphics|tarjeta|video|radeon|nvidia|amd|intel core|ryzen/);
 
             const description = 
-                `${fullTitle} en excelente estado, equipo de gama alta ideal para trabajo profesional.\n\n` +
-                `🔹 Especificaciones:\n` +
-                ` • ${chip}\n` +
-                ` • ${ram}\n` +
-                ` • ${ssd}\n` +
-                ` • ${screen}\n\n` +
-                (isMac ? `🔋 Batería en estado sobresaliente:\n • ${batteryCap}% de capacidad\n • Solo ${batteryCycles} ciclos (muy poco uso)\n\n` : '') +
-                `🔹 Condición:\n` +
-                ` • Sin golpes ni detalles\n` +
-                ` • Funcionamiento 100%\n` +
-                ` • Equipo original\n\n` +
-                `📦 Incluye:\n` +
-                ` • Cargador original\n` +
-                ` • No incluye caja\n\n` +
-                `💼 Ideal para edición, diseño, programación o trabajo exigente.\n\n` +
-                `💳 MEDIOS DE PAGO:\n` +
-                ` • Transferencia Bancaria / Nequi (Costo $0)\n` +
-                ` • Tarjeta de Crédito vía PayPal / MercadoPago (+10%)\n` +
-                ` • Se requiere anticipo del 50% para pedido bajo demanda\n\n` +
-                `Equipo listo para usar. Muy bien cuidado.\n\n` +
-                `visita nuestro sitio\n` +
-                `https://jmarintech.onrender.com/`;
+                `🔥 ¡OFERTA ÉLITE! ${fullTitle}\n` +
+                `Equipo en excelente estado, ideal para profesionales, diseñadores o gamers exigentes.\n\n` +
+                `💎 ESPECIFICACIONES TÉCNICAS:\n` +
+                (isHardware ? ` • Chipset/Modelo: ${fullTitle.split(' ').slice(0, 5).join(' ')}\n` : ` • Procesador: ${chip}\n`) +
+                ` • Memoria: ${ram}\n` +
+                (!isHardware ? ` • Disco: ${ssd}\n` : '') +
+                (!isHardware ? ` • ${screen}\n` : '') +
+                (gpu && !isHardware ? `${gpu}\n` : '') +
+                (ports ? `${ports}\n` : '') +
+                ` • Estado estético: 10/10\n\n` +
+                (isMac ? `🔋 ESTADO DE BATERÍA:\n • Capacidad: ${batteryCap}%\n • Ciclos: ${batteryCycles} (Muy poco uso)\n\n` : '') +
+                `✨ POR QUÉ ELEGIRNOS:\n` +
+                ` • Sin golpes ni detalles estéticos\n` +
+                ` • Funcionamiento al 100% (Inspeccionado)\n` +
+                ` • Equipo 100% Original\n\n` +
+                `📦 INCLUYE:\n` +
+                (isHardware ? ` • Empaque original / Caja\n` : ` • Cargador original\n`) +
+                ` • Envío asegurado\n\n` +
+                `💳 MEDIOS DE PAGO SEGUROS:\n` +
+                ` • Transferencia / Nequi / Bancolombia (Costo $0)\n` +
+                ` • Tarjeta Crédito vía PayPal / MercadoPago (+10%)\n` +
+                ` • 💡 Pedido bajo demanda: Requiere 50% de anticipo\n\n` +
+                `🚀 PRODUCTO IMPORTADO - Entrega 10 a 15 días.\n\n` +
+                `¡Escríbenos ahora! Pocas unidades disponibles a este precio.\n\n` +
+                `📍 Envigado - Medellín\n` +
+                `🌐 Visita nuestro catálogo: https://jmarintech.onrender.com/`;
 
             const fullText = `--- INFO PARA FACEBOOK MARKETPLACE ---\n\n` +
                              `TÍTULO: ${fullTitle.substring(0, 100)}\n` +
