@@ -72,6 +72,7 @@ class ValidatorBot {
                 result.isValid = true;
                 result.weight = deepData.weight || 0;
                 if (deepData.image) result.image = deepData.image;
+                if (deepData.gallery) result.gallery = deepData.gallery;
                 if (deepData.title) {
                     result.title = await AIProcessor.generateOptimizedTitle(deepData.title);
                 }

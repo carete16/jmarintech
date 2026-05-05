@@ -46,6 +46,7 @@ class CoreProcessor {
                 price_offer: validation.realPrice,
                 price_official: validation.officialPrice || 0,
                 image: validation.image || opp.image,
+                gallery: validation.gallery ? JSON.stringify(validation.gallery) : null,
                 tienda: validation.storeName || opp.tienda,
                 categoria: opp.categoria || validation.categoria || 'General',
                 status: 'pending_express', // POR DEFECTO: Todo va a cola de aprobación

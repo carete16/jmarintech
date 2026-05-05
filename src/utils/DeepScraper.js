@@ -79,7 +79,7 @@ class DeepScraper {
                     return parseFloat(raw) || 0;
                 };
 
-                let offerPrice = 0, officialPrice = 0, title = "", image = "", specs = "", description = "";
+                let offerPrice = 0, officialPrice = 0, title = "", image = "", gallery = [], specs = "", description = "";
 
                 // --- MÉTODO 1: EXTRACCIÓN DE METADATOS OCULTOS (JSON-LD) ---
                 try {
@@ -92,6 +92,7 @@ class DeepScraper {
                             if (product) {
                                 if (!title) title = product.name;
                                 if (!image) image = Array.isArray(product.image) ? product.image[0] : product.image;
+                                if (Array.isArray(product.image)) gallery = product.image;
                                 if (product.offers) {
                                     const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
                                     if (offer.price && offer.price > 0) offerPrice = parseFloat(offer.price);
@@ -110,18 +111,27 @@ class DeepScraper {
                                    document.querySelector('.x-bin-price__content');
                 const ebayImg = document.querySelector('.ux-image-magnify-wrapper img')?.src || 
                                document.querySelector('#icImg')?.src;
-                const ebaySpecs = document.querySelector('.ux-layout-section--item-specifications, .itemAttr')?.innerText || "";
+                
+                // Galería eBay
+                const ebayGallery = Array.from(document.querySelectorAll('.ux-image-filmstrip-carousel img, .ux-image-filmstrip img'))
+                    .map(img => img.src.replace(/s-l\d+\./, 's-l1600.'))
+                    .filter(src => src && !src.includes('clear.gif') && !src.includes('ebaystatic'));
 
                 const amzTitle = document.querySelector('#productTitle')?.innerText;
                 const amzPrice = document.querySelector('.a-price .a-offscreen')?.innerText || 
                                  document.querySelector('#priceblock_ourprice')?.innerText;
                 const amzImg = document.querySelector('#landingImage')?.src;
-                const amzSpecs = document.querySelector('#feature-bullets, #prodDetails')?.innerText || "";
+                
+                // Galería Amazon
+                const amzGallery = Array.from(document.querySelectorAll('#altImages img'))
+                    .map(img => img.src.replace(/\._.*_\./, '.'))
+                    .filter(src => src && !src.includes('play-button') && !src.includes('video'));
 
                 if (!title) title = ebayTitle || amzTitle || document.title;
                 if (!offerPrice) offerPrice = cleanPrice(ebayPriceEl?.innerText || amzPrice);
                 if (!image) image = ebayImg || amzImg || "";
-                if (!specs) specs = (ebaySpecs + " " + amzSpecs).trim();
+                if (gallery.length === 0) gallery = [...new Set([...ebayGallery, ...amzGallery])].slice(0, 10);
+                if (!specs) specs = (document.querySelector('.ux-layout-section--item-specifications, .itemAttr')?.innerText || "" + " " + (document.querySelector('#feature-bullets, #prodDetails')?.innerText || "")).trim();
 
                 // Detección especial de precios en español (Sin símbolo $)
                 if (!offerPrice) {
@@ -145,6 +155,7 @@ class DeepScraper {
                     title: (title || "").includes('http') ? "Producto Detectado" : (title || "").trim(),
                     offerPrice,
                     image,
+                    gallery,
                     specs,
                     isBlocked: document.title.includes('Access Denied')
                 };

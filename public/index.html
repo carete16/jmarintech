@@ -280,6 +280,32 @@
             gap: 24px;
         }
 
+        /* GALLERY */
+        .modal-gallery {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .gallery-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            flex-shrink: 0;
+            background: white;
+        }
+        .gallery-thumb:hover, .gallery-thumb.active {
+            border-color: #3b82f6;
+        }
+        .modal-gallery::-webkit-scrollbar { height: 4px; }
+        .modal-gallery::-webkit-scrollbar-track { background: #f1f5f9; }
+        .modal-gallery::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
         /* CARD */
         .card {
             background: white;
@@ -775,9 +801,24 @@
             const ahorroPesos = marketRef ? (marketRef - deal.price_cop) : 0;
             const realSavingsPercent = marketRef > 0 ? Math.round(((marketRef - deal.price_cop) / marketRef) * 100) : 0;
 
+            let gallery = [];
+            try { gallery = typeof deal.gallery === 'string' ? JSON.parse(deal.gallery) : (deal.gallery || []); } catch(e) {}
+
             content.innerHTML = `
-                <div class="modal-left" style="padding: 20px;">
-                    <img src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" style="max-height: 350px;">
+                <div class="modal-left" style="padding: 20px; display: flex; flex-direction: column; align-items: center;">
+                    <div id="mainModalImgContainer" style="width: 100%; height: 350px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 20px;">
+                        <img id="mainModalImg" src="/api/proxy-image?url=${encodeURIComponent(deal.image)}" alt="${displayTitle}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                    </div>
+                    
+                    ${gallery.length > 1 ? `
+                        <div class="modal-gallery">
+                            ${gallery.map((img, idx) => `
+                                <img src="/api/proxy-image?url=${encodeURIComponent(img)}" 
+                                     class="gallery-thumb ${img === deal.image ? 'active' : ''}" 
+                                     onclick="changeModalImg('${img}', this)">
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="modal-right" style="padding: 30px 25px;">
                     <div style="font-size: 0.7rem; font-weight: 800; color: #3b82f6; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.1em;">
@@ -821,6 +862,12 @@
 
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+        }
+
+        function changeModalImg(url, thumb) {
+            document.getElementById('mainModalImg').src = '/api/proxy-image?url=' + encodeURIComponent(url);
+            document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
         }
 
         function shareProduct(id) {

@@ -90,7 +90,8 @@ class TelegramNotifier {
                     score: deal.score,
                     status: deal.status || 'published',
                     price_cop: deal.price_cop || 0,
-                    is_historic_low: deal.is_historic_low
+                    is_historic_low: deal.is_historic_low,
+                    gallery: deal.gallery
                 });
                 logger.info(`💾 Deal guardado en la Web: ${deal.title}`);
             } catch (dbErr) {
