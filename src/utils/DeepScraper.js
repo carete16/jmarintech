@@ -112,6 +112,11 @@ class DeepScraper {
                 const ebayImg = document.querySelector('.ux-image-magnify-wrapper img')?.src || 
                                document.querySelector('#icImg')?.src;
                 
+                // Condición del producto (Crítico para eBay)
+                const ebayCondition = document.querySelector('.ux-call-out__text')?.innerText || 
+                                     document.querySelector('.x-item-condition-text')?.innerText || 
+                                     document.querySelector('[data-testid="x-item-condition"] .ux-textspans')?.innerText || "";
+
                 // Galería eBay
                 const ebayGallery = Array.from(document.querySelectorAll('.ux-image-filmstrip-carousel img, .ux-image-filmstrip img'))
                     .map(img => img.src.replace(/s-l\d+\./, 's-l1600.'))
@@ -131,7 +136,11 @@ class DeepScraper {
                 if (!offerPrice) offerPrice = cleanPrice(ebayPriceEl?.innerText || amzPrice);
                 if (!image) image = ebayImg || amzImg || "";
                 if (gallery.length === 0) gallery = [...new Set([...ebayGallery, ...amzGallery])].slice(0, 10);
-                if (!specs) specs = (document.querySelector('.ux-layout-section--item-specifications, .itemAttr')?.innerText || "" + " " + (document.querySelector('#feature-bullets, #prodDetails')?.innerText || "")).trim();
+                
+                // Recolección de Specs con Condición Prioritaria
+                let rawSpecs = (document.querySelector('.ux-layout-section--item-specifications, .itemAttr')?.innerText || "" + " " + (document.querySelector('#feature-bullets, #prodDetails')?.innerText || "")).trim();
+                if (ebayCondition) rawSpecs = `CONDITION: ${ebayCondition} | ` + rawSpecs;
+                if (!specs) specs = rawSpecs;
 
                 // Detección especial de precios en español (Sin símbolo $)
                 if (!offerPrice) {

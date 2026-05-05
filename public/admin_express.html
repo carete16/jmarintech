@@ -1679,6 +1679,7 @@
         }
 
         // --- DETECCIÓN EN TIEMPO REAL DESDE TEXTO ---
+        // --- DETECCIÓN EN TIEMPO REAL DESDE TEXTO ---
         function detectConditionFromText(id) {
             const extraNotes = document.getElementById(`specs-${id}`)?.value || '';
             const title = document.getElementById(`title-${id}`)?.value || '';
@@ -1689,11 +1690,19 @@
             const low = (title + ' ' + extraNotes).toLowerCase();
             let detected = null;
 
-            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || low.includes('certified')) detected = 'Refurbished';
-            else if (low.includes('open box') || low.includes('caja abierta')) detected = 'Open Box';
-            else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use')) detected = 'Usado';
+            // Prioridad Refurbished (Muy común en eBay con grados)
+            if (low.includes('refurbish') || low.includes('reformado') || low.includes('renovado') || low.includes('renewed') || 
+                low.includes('90-day') || low.includes('reacondicionado') || low.includes('excellent') || 
+                low.includes('very good') || low.includes('good') || low.includes('grade a') || low.includes('certified')) {
+                detected = 'Refurbished';
+            } 
+            else if (low.includes('open box') || low.includes('caja abierta') || low.includes('unused')) {
+                detected = 'Open Box';
+            }
+            else if (low.includes('used') || low.includes('usado') || low.includes('pre-owned') || low.includes('prior use') || low.includes('fair')) {
+                detected = 'Usado';
+            }
             
-            // Solo cambiamos si detectamos algo claro para no sobreescribir selecciones manuales a "Nuevo" erróneamente
             if (detected) {
                 conditionSelect.value = detected;
             }
@@ -1995,46 +2004,62 @@
             const titleInput = document.getElementById(`title-${id}`);
             const sellingTitleInput = document.getElementById(`selling-title-${id}`);
             const copEl = document.getElementById(`cop-${id}`);
-            const specsInput = document.getElementById(`specs-${id}`);
+            const specsStr = document.getElementById(`structured-specs-${id}`)?.value || '{}';
+            const originalSpecs = document.getElementById(`specs-${id}`)?.value || '';
             const benefitsInput = document.getElementById(`benefits-${id}`);
-            const badgeInput = document.getElementById(`badge-${id}`);
+            
+            let specs = {};
+            try { specs = JSON.parse(specsStr); } catch(e) {}
 
-            const title = (sellingTitleInput && sellingTitleInput.value.trim()) ? sellingTitleInput.value.trim() : (titleInput ? titleInput.value.trim() : '');
+            const fullTitle = (sellingTitleInput && sellingTitleInput.value.trim()) ? sellingTitleInput.value.trim().split(' - ')[0] : (titleInput ? titleInput.value.trim() : '');
             const rawCop = copEl ? copEl.innerText.replace(/[^0-9]/g, '') : '0';
-            const specs = specsInput ? specsInput.value.trim() : '';
-            const benefits = benefitsInput ? benefitsInput.value.trim() : '';
-            const badge = badgeInput ? badgeInput.value.trim() : '';
+            
+            if (!fullTitle) { alert('⚠️ Ingresa un TÍTULO para generar la info de Marketplace.'); return; }
 
-            if (!title) { alert('⚠️ Ingresa un TÍTULO para generar la info de Marketplace.'); return; }
+            // Extracción inteligente para el template premium
+            const chip = specs.cpu || "Chip Apple M1 / Intel Core";
+            const ram = specs.ram || "16 GB de memoria RAM";
+            const ssd = specs.disk || "512 GB SSD (almacenamiento rápido)";
+            const screen = specs.screen ? `Pantalla de ${specs.screen}` : "Pantalla Retina";
+            
+            // Intentar detectar batería si está en el texto original
+            const batteryMatch = originalSpecs.match(/(\d+)%\s*(?:capacity|capacidad|health)/i);
+            const cycleMatch = originalSpecs.match(/(\d+)\s*(?:cycles|ciclos)/i);
+            const batteryCap = batteryMatch ? batteryMatch[1] : "95+";
+            const batteryCycles = cycleMatch ? cycleMatch[1] : "Bajos";
 
-            // Formatear especificaciones como bullet points si no lo están
-            const formattedSpecs = specs.split('\n').map(s => s.trim().startsWith('•') || s.trim().startsWith('-') || s.trim().startsWith('🔹') ? s.trim() : `🔹 ${s.trim()}`).filter(s => s !== '🔹').join('\n');
-            const formattedBenefits = benefits.split('\n').map(b => b.trim().startsWith('✅') || b.trim().startsWith('-') ? b.trim() : `✅ ${b.trim()}`).filter(b => b !== '✅').join('\n');
-
-            const isLaptop = title.toLowerCase().includes('laptop') || title.toLowerCase().includes('macbook') || title.toLowerCase().includes('notebook');
-            const brand = title.split(' ')[0].toLowerCase();
-
-            // Generar 11 etiquetas en español
+            const brand = fullTitle.split(' ')[0].toLowerCase();
             const tagBase = ["ganga", "oferta", "tecnologia", "remate", "barato", "nuevo", "importado", "medellin", "envigado", "colombia"];
             tagBase.push(brand);
             const tags = tagBase.slice(0, 11).join(', ');
 
+            const isMac = fullTitle.toLowerCase().includes('macbook') || fullTitle.toLowerCase().includes('apple');
+
             const description = 
-                `${title}\n\n` +
-                `¡Oportunidad Única! ${badge || 'Producto de Alta Calidad'}\n\n` +
-                `💎 ESPECIFICACIONES:\n${formattedSpecs || 'Ver descripción detallada en fotos.'}\n\n` +
-                (isLaptop ? `🔋 BATERÍA: Estado sobresaliente / Nueva\n\n` : '') +
-                `✨ CONDICIÓN:\n- Sin uso ni detalles (Nuevo)\n- Funcionamiento 100%\n- Equipo original\n\n` +
-                `📦 INCLUYE:\n${formattedBenefits || '- Caja original\n- Accesorios completos'}\n\n` +
-                `🎯 IDEAL PARA:\n- Trabajo profesional / Estudiantes\n- Uso exigente diario\n\n` +
-                `📍 Ubicación: Envigado / Medellín\n` +
-                `🚚 Envíos a todo el país.`;
+                `${fullTitle} en excelente estado, equipo de gama alta ideal para trabajo profesional.\n\n` +
+                `🔹 Especificaciones:\n` +
+                ` • ${chip}\n` +
+                ` • ${ram}\n` +
+                ` • ${ssd}\n` +
+                ` • ${screen}\n\n` +
+                (isMac ? `🔋 Batería en estado sobresaliente:\n • ${batteryCap}% de capacidad\n • Solo ${batteryCycles} ciclos (muy poco uso)\n\n` : '') +
+                `🔹 Condición:\n` +
+                ` • Sin golpes ni detalles\n` +
+                ` • Funcionamiento 100%\n` +
+                ` • Equipo original\n\n` +
+                `📦 Incluye:\n` +
+                ` • Cargador original\n` +
+                ` • No incluye caja\n\n` +
+                `💼 Ideal para edición, diseño, programación o trabajo exigente.\n\n` +
+                `Equipo listo para usar. Muy bien cuidado.\n\n` +
+                `visita nuestro sitio\n` +
+                `https://jmarintech.onrender.com/`;
 
             const fullText = `--- INFO PARA FACEBOOK MARKETPLACE ---\n\n` +
-                             `TÍTULO: ${title.substring(0, 100)}\n` +
+                             `TÍTULO: ${fullTitle.substring(0, 100)}\n` +
                              `PRECIO: ${rawCop}\n` +
                              `CATEGORÍA: Electrónica e informática\n` +
-                             `ESTADO: Nuevo\n` +
+                             `ESTADO: Usado - Como nuevo\n` +
                              `ETIQUETAS: ${tags}\n\n` +
                              `--- DESCRIPCIÓN (COPIAR ABAJO) ---\n\n${description}`;
 

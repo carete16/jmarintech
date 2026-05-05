@@ -76,7 +76,8 @@ Responde ÚNICAMENTE un JSON válido (sin markdown) con estos campos:
     "ram": "ej: 16GB DDR4",
     "disk": "ej: 256GB SSD",
     "camera": "ej: HD 720p",
-    "network": "ej: WiFi 11ac + BT"
+    "network": "ej: WiFi 11ac + BT",
+    "condition": "ej: Very Good - Refurbished o Excelente (Extrae el estado exacto del producto)"
 }
 
 Texto: ${rawSpecs}`;

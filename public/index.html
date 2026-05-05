@@ -789,7 +789,7 @@
             const displayTitle = deal.selling_title || deal.title;
             const priceStr = formatCOP(deal.price_cop);
             const publicUrl = 'https://jmarintech.onrender.com';
-            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`Hola! Me interesa: ${displayTitle}\nPrecio: ${priceStr}\nLink: ${publicUrl}/p/${deal.id}`)}`;
+            const waLink = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(`¡Hola JMARIN TECH! 👋\n\nMe interesa este equipo:\n📌 ${displayTitle}\n💰 Precio: ${priceStr}\n🔗 Link: ${publicUrl}/p/${deal.id}\n\nQuisiera consultar disponibilidad y medios de pago:\n✅ Transferencia / Nequi ($0 extra)\n💳 Tarjeta / PayPal (+10% comisión)`)}`;
             
             let specs = {};
             try { specs = typeof deal.structured_specs === 'string' ? JSON.parse(deal.structured_specs) : (deal.structured_specs || {}); } catch(e) {}
@@ -845,6 +845,30 @@
                             ${specs.disk ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-hard-drive" style="color:#64748b"></i> ${specs.disk}</div>` : ''}
                             <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-tag" style="color:#64748b"></i> Estado: ${deal.product_condition || 'Nuevo'}</div>
                             <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-plane-arrival" style="color:#64748b"></i> Importación Directa USA</div>
+                        </div>
+                    </div>
+
+                    <!-- MÉTODOS DE PAGO -->
+                    <div style="background: #ffffff; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                        <h4 style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.05em;">
+                            <i class="fa-solid fa-shield-check" style="color:#10b981"></i> MÉTODOS DE PAGO SEGUROS
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fa-solid fa-building-columns" style="color: #166534; font-size: 0.9rem;"></i>
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: #166534;">Transferencia Bancaria / Nequi</div>
+                                </div>
+                                <div style="font-size: 0.65rem; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 5px;">$0 EXTRA</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fa-brands fa-paypal" style="color: #2563eb; font-size: 0.9rem;"></i>
+                                    <i class="fa-solid fa-credit-card" style="color: #64748b; font-size: 0.9rem;"></i>
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: #475569;">Tarjeta Crédito / PayPal / ML</div>
+                                </div>
+                                <div style="font-size: 0.65rem; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 2px 8px; border-radius: 5px;">+10% COMISIÓN</div>
+                            </div>
                         </div>
                     </div>
 
