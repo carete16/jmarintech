@@ -155,8 +155,8 @@ const saveDeal = (deal) => {
   try {
     const stmt = db.prepare(`
         INSERT OR REPLACE INTO published_deals 
-        (id, link, original_link, title, price_official, price_offer, image, gallery, tienda, categoria, description, coupon, is_historic_low, score, status, price_cop, weight, profit, custom_dolar, custom_profit_percent, original_specs, structured_specs, selling_title, original_price, savings, benefits, badge, market_price_cop, product_condition)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, link, original_link, title, price_official, price_offer, image, gallery, tienda, categoria, description, coupon, is_historic_low, score, status, price_cop, weight, profit, custom_dolar, custom_profit_percent, original_specs, structured_specs, selling_title, original_price, savings, benefits, badge, market_price_cop, product_condition, stock_virtual, stock_status, stock_updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
     const result = stmt.run(
       deal.id,
@@ -187,7 +187,10 @@ const saveDeal = (deal) => {
       Array.isArray(deal.benefits) ? JSON.stringify(deal.benefits) : (deal.benefits || null),
       deal.badge || null,
       deal.market_price_cop || 0,
-      deal.product_condition || deal.condition || 'Nuevo'
+      deal.product_condition || deal.condition || 'Nuevo',
+      deal.stock_virtual !== undefined ? deal.stock_virtual : 5,
+      deal.stock_status || 'disponible',
+      deal.stock_updated_at || null
     );
 
     // --- DISPARADOR AUTOMÁTICO A LA NUBE (RENDER) ---

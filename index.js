@@ -207,14 +207,18 @@ app.post('/api/admin/sync', authMiddleware, (req, res) => {
         db.prepare(`
           INSERT OR REPLACE INTO published_deals 
           (id, title, selling_title, link, original_link, image, price_cop, price_offer, price_official, 
-           market_price_cop, tienda, categoria, structured_specs, benefits, badge, savings, status, posted_at)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           market_price_cop, tienda, categoria, structured_specs, benefits, badge, savings, status, posted_at,
+           stock_virtual, stock_status, stock_updated_at)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `).run(
           deal.id, deal.title, deal.selling_title || null, deal.link, deal.original_link || deal.link,
           deal.image, deal.price_cop || 0, deal.price_offer || 0, deal.price_official || 0,
           deal.market_price_cop || 0, deal.tienda || 'JMARIN TECH', deal.categoria || 'Tecnología',
           deal.structured_specs || null, deal.benefits || null, deal.badge || null,
-          deal.savings || 0, 'published', deal.posted_at || new Date().toISOString()
+          deal.savings || 0, 'published', deal.posted_at || new Date().toISOString(),
+          deal.stock_virtual !== undefined ? deal.stock_virtual : 5,
+          deal.stock_status || 'disponible',
+          deal.stock_updated_at || null
         );
         saved++;
       } catch(e) { skipped++; }
