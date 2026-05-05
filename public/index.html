@@ -306,6 +306,58 @@
         .modal-gallery::-webkit-scrollbar-track { background: #f1f5f9; }
         .modal-gallery::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
+        /* PAYMENT MODULE */
+        .payment-method-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            background: white;
+        }
+        .payment-method-card.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .payment-method-card.active::after {
+            content: '✓';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #10b981;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .summary-box {
+            background: #0f172a;
+            color: white;
+            padding: 15px;
+            border-radius: 16px;
+            margin-top: 15px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+        .summary-total {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #10b981;
+        }
+
         /* CARD */
         .card {
             background: white;
@@ -680,6 +732,19 @@
                     </ul>
                 ` : '';
 
+                const paymentSummaryHtml = `
+                    <div style="margin-top: 12px; padding: 10px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
+                        <div style="font-size: 0.6rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em;">Medios de Pago</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div style="font-size: 0.65rem; color: #166534; font-weight: 700;"><i class="fa-solid fa-building-columns"></i> 0%</div>
+                            <div style="width: 1px; height: 10px; background: #e2e8f0;"></div>
+                            <div style="font-size: 0.65rem; color: #475569; font-weight: 700;"><i class="fa-brands fa-paypal"></i> +10%</div>
+                            <div style="width: 1px; height: 10px; background: #e2e8f0;"></div>
+                            <div style="font-size: 0.65rem; color: #0f172a; font-weight: 700;">50% Anticipo</div>
+                        </div>
+                    </div>
+                `;
+
                 // --- LÓGICA DE PRECIOS Y AHORRO ---
                 // Priorizamos el campo manual market_price_cop si el usuario lo llenó
                 const marketRef = deal.market_price_cop || specs.marketHighCOP || specs.marketMedianCOP || specs.marketPriceCOP || null;
@@ -739,6 +804,7 @@
                         
                         <!-- 2. PRECIOS -->
                         ${priceHtml}
+                        ${paymentSummaryHtml}
                         <!-- UX CONFIANZA -->
                         <div style="font-size:0.65rem; color:#64748b; margin-top:6px; margin-bottom:10px;">
                             🚀 Importado bajo pedido desde USA &nbsp;·&nbsp; ⏳ Entrega estimada: 10–15 días
@@ -848,36 +914,76 @@
                         </div>
                     </div>
 
-                    <!-- MÉTODOS DE PAGO -->
-                    <div style="background: #ffffff; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-                        <h4 style="font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.05em;">
-                            <i class="fa-solid fa-shield-check" style="color:#10b981"></i> MÉTODOS DE PAGO SEGUROS
+                    <!-- MÓDULO DE PAGOS INTERACTIVO -->
+                    <div style="margin-top: 20px;">
+                        <h4 style="font-size: 0.8rem; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-shield-halved" style="color:#10b981"></i> FORMAS DE PAGO SEGURAS
                         </h4>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <i class="fa-solid fa-building-columns" style="color: #166534; font-size: 0.9rem;"></i>
-                                    <div style="font-size: 0.75rem; font-weight: 700; color: #166534;">Transferencia Bancaria / Nequi</div>
+                        
+                        <p style="font-size: 0.75rem; color: #64748b; line-height: 1.4; margin-bottom: 15px;">
+                            Trabajamos con <b>pedido bajo demanda</b> desde USA. Para procesar tu compra se requiere un <b>anticipo del 50%</b>.
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div id="pay-method-transfer" class="payment-method-card active" onclick="selectPaymentMethod('transfer', ${deal.price_cop})">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                    <i class="fa-solid fa-building-columns" style="color:#166534"></i>
+                                    <span style="font-size: 0.75rem; font-weight: 800;">Transferencia</span>
                                 </div>
-                                <div style="font-size: 0.65rem; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 5px;">$0 EXTRA</div>
+                                <div style="font-size: 0.65rem; color: #15803d; font-weight: 700;">Nequi / Bancolombia</div>
+                                <div style="font-size: 0.6rem; color: #64748b; margin-top: 4px;">Sin recargo adicional</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <i class="fa-brands fa-paypal" style="color: #2563eb; font-size: 0.9rem;"></i>
-                                    <i class="fa-solid fa-credit-card" style="color: #64748b; font-size: 0.9rem;"></i>
-                                    <div style="font-size: 0.75rem; font-weight: 700; color: #475569;">Tarjeta Crédito / PayPal / ML</div>
+                            <div id="pay-method-card" class="payment-method-card" onclick="selectPaymentMethod('card', ${deal.price_cop})">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                                    <i class="fa-solid fa-credit-card" style="color:#2563eb"></i>
+                                    <span style="font-size: 0.75rem; font-weight: 800;">Tarjeta / PayPal</span>
                                 </div>
-                                <div style="font-size: 0.65rem; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 2px 8px; border-radius: 5px;">+10% COMISIÓN</div>
+                                <div style="font-size: 0.65rem; color: #475569; font-weight: 700;">PayPal y MercadoPago</div>
+                                <div style="font-size: 0.6rem; color: #ef4444; margin-top: 4px;">+10% recargo bancario</div>
                             </div>
+                        </div>
+
+                        <!-- RESUMEN DINÁMICO -->
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Precio del producto:</span>
+                                <span>${priceStr}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Anticipo requerido (50%):</span>
+                                <span id="summary-deposit">${formatCOP(deal.price_cop / 2)}</span>
+                            </div>
+                            <div class="summary-row" id="summary-fee-row" style="display: none;">
+                                <span style="color: #94a3b8;">Recargo Tarjeta (10%):</span>
+                                <span id="summary-fee" style="color: #fb7185;"></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Método seleccionado:</span>
+                                <span id="summary-method-label" style="color: #10b981;">Transferencia</span>
+                            </div>
+                            <div class="summary-row summary-total">
+                                <span>TOTAL ANTICIPO:</span>
+                                <span id="summary-total-val">${formatCOP(deal.price_cop / 2)}</span>
+                            </div>
+                        </div>
+
+                        <!-- TEXTO DE CONFIANZA -->
+                        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div style="font-size: 0.65rem; color: #64748b;"><i class="fa-solid fa-plane-arrival me-1"></i> Importado desde USA</div>
+                            <div style="font-size: 0.65rem; color: #64748b;"><i class="fa-solid fa-truck-fast me-1"></i> Entrega 10-15 días</div>
+                            <div style="font-size: 0.65rem; color: #64748b;"><i class="fa-solid fa-check-double me-1"></i> El anticipo asegura compra</div>
+                            <div style="font-size: 0.65rem; color: #64748b;"><i class="fa-solid fa-circle-info me-1"></i> Recargo solo para tarjeta</div>
                         </div>
                     </div>
 
-
-                    <div style="margin-top: auto; display: flex; gap: 10px;">
-                        <a href="${waLink}" target="_blank" class="wa-btn" style="flex: 1; padding: 18px; font-size: 1.1rem; background: #065f46; box-shadow: 0 10px 20px -5px rgba(6, 95, 70, 0.3);">
-                            CONSULTAR POR WHATSAPP <i class="fa-brands fa-whatsapp"></i>
-                        </a>
-                        <button onclick="shareProduct('${deal.id}')" class="wa-btn" style="width: 70px; background: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
+                    <div style="margin-top: 25px; display: flex; gap: 10px;">
+                        <button onclick="payAnticipo('${deal.id}')" class="wa-btn" style="flex: 1; padding: 20px; font-size: 1.1rem; background: #065f46; box-shadow: 0 10px 20px -5px rgba(6, 95, 70, 0.3); border: none;">
+                            PAGAR ANTICIPO AHORA <i class="fa-brands fa-whatsapp"></i>
+                        </button>
+                        <button onclick="shareProduct('${deal.id}')" class="wa-btn" style="width: 70px; background: #64748b; padding: 0; display: flex; align-items: center; justify-content: center; border: none;">
+                            <i class="fa-solid fa-share-nodes" style="font-size: 1.5rem;"></i>
+                        </button>
+                    </div>
                             <i class="fa-solid fa-share-nodes" style="font-size: 1.5rem;"></i>
                         </button>
                     </div>
@@ -886,6 +992,48 @@
 
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            
+            // Estado inicial del módulo de pagos
+            currentPaymentMethod = 'transfer';
+        }
+
+        let currentPaymentMethod = 'transfer';
+
+        function selectPaymentMethod(method, priceCOP) {
+            currentPaymentMethod = method;
+            
+            // Actualizar UI de botones
+            document.getElementById('pay-method-transfer').classList.toggle('active', method === 'transfer');
+            document.getElementById('pay-method-card').classList.toggle('active', method === 'card');
+            
+            // Lógica de cálculo
+            const deposit = priceCOP / 2;
+            const fee = method === 'card' ? (deposit * 0.10) : 0;
+            const total = deposit + fee;
+            
+            // Actualizar Resumen
+            document.getElementById('summary-fee-row').style.display = method === 'card' ? 'flex' : 'none';
+            document.getElementById('summary-fee').innerText = '+' + formatCOP(fee);
+            document.getElementById('summary-method-label').innerText = method === 'card' ? 'Tarjeta / PayPal' : 'Transferencia';
+            document.getElementById('summary-total-val').innerText = formatCOP(total);
+        }
+
+        function payAnticipo(id) {
+            const deal = allDeals.find(d => d.id === id);
+            if (!deal) return;
+
+            const methodLabel = currentPaymentMethod === 'card' ? 'Tarjeta / PayPal (+10%)' : 'Transferencia / Nequi';
+            const priceCOP = deal.price_cop;
+            const deposit = priceCOP / 2;
+            const fee = currentPaymentMethod === 'card' ? (deposit * 0.10) : 0;
+            const total = deposit + fee;
+            
+            const displayTitle = deal.selling_title || deal.title;
+            const publicUrl = 'https://jmarintech.onrender.com';
+            
+            const message = `¡Hola JMARIN TECH! 👋\n\nQuiero pagar el *ANTICIPO* de este producto:\n📌 ${displayTitle}\n\n💰 Precio Total: ${formatCOP(priceCOP)}\n💳 Anticipo (50%): ${formatCOP(deposit)}\n🔌 Método: ${methodLabel}\n🔥 *TOTAL A PAGAR HOY: ${formatCOP(total)}*\n\n🔗 Link: ${publicUrl}/p/${deal.id}`;
+            
+            window.open(`https://wa.me/${WA_PHONE}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
         function changeModalImg(url, thumb) {
