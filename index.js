@@ -293,13 +293,18 @@ app.get('/p/:id', (req, res) => {
     <meta property="og:type" content="product">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .card-vip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; overflow: hidden; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .img-box { background: white; padding: 30px; display: flex; align-items: center; justify-content: center; }
-        .img-box img { max-width: 100%; height: auto; border-radius: 10px; }
-        .price { color: #10b981; font-size: 2.5rem; font-weight: 800; margin: 10px 0; }
-        .logo { max-width: 120px; position: absolute; top: 30px; }
-        .specs-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; margin: 5px; display: inline-block; }
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .card-vip { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; overflow: hidden; max-width: 800px; width: 100%; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
+        .img-box { background: white; padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 400px; }
+        .img-box img { width: 100%; height: 100%; object-fit: contain; max-height: 600px; transition: transform 0.5s ease; }
+        .img-box:hover img { transform: scale(1.05); }
+        .price { color: #10b981; font-size: 3.5rem; font-weight: 900; margin: 15px 0; letter-spacing: -1px; }
+        .logo { max-width: 150px; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); }
+        .specs-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 20px; border-radius: 15px; font-size: 0.9rem; margin: 5px; display: inline-block; font-weight: 600; }
+        .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; text-align: left; }
+        .spec-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .spec-label { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 2px; }
+        .spec-value { font-size: 1rem; font-weight: 700; color: white; }
     </style>
 </head>
 <body>
@@ -308,20 +313,30 @@ app.get('/p/:id', (req, res) => {
         <div class="img-box">
             <img src="${deal.image}" alt="">
         </div>
-        <div class="p-4 text-center">
-            <h1 class="h4 fw-bold mb-3">${deal.title}</h1>
+        <div class="p-5 text-center">
+            <h1 class="h3 fw-bold mb-4" style="color: #f8fafc;">${deal.title}</h1>
+            
+            <div class="spec-grid">
+                ${specs.cpu ? `<div class="spec-item"><span class="spec-label">Procesador</span><span class="spec-value">${specs.cpu}</span></div>` : ''}
+                ${specs.gen ? `<div class="spec-item"><span class="spec-label">Generación</span><span class="spec-value">${specs.gen}</span></div>` : ''}
+                ${specs.ram ? `<div class="spec-item"><span class="spec-label">Memoria RAM</span><span class="spec-value">${specs.ram}</span></div>` : ''}
+                ${specs.ssd ? `<div class="spec-item"><span class="spec-label">Almacenamiento</span><span class="spec-value">${specs.ssd}</span></div>` : ''}
+            </div>
+
             <div class="price">${priceStr}</div>
-            <div class="mb-4">
+            <div class="mb-5">
                 <span class="specs-badge">Refurbished</span>
                 <span class="specs-badge">Importación Directa</span>
+                ${specs.year ? `<span class="specs-badge">${specs.year}</span>` : ''}
             </div>
-            <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
-                ME INTERESA / SEPARAR
+            
+            <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-lg" style="font-size: 1.1rem; background: #10b981; border: none;">
+                <i class="fa-brands fa-whatsapp me-2"></i> ME INTERESA / SEPARAR
             </a>
-            <a href="https://jmarintech.onrender.com" class="btn btn-outline-light w-100 py-2 mt-2 rounded-pill" style="font-size: 0.85rem;">
-                🏪 Ver más ofertas en JMARIN TECH
+            <a href="https://jmarintech.onrender.com" class="btn btn-outline-light w-100 py-3 mt-3 rounded-pill fw-bold" style="font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2);">
+                🏫 Ver más ofertas en JMARIN TECH
             </a>
-            <p class="mt-4 xsmall text-white-50" style="font-size: 0.7rem;">© 2026 JMARIN TECH - Todos los derechos reservados</p>
+            <p class="mt-5 xsmall text-white-50" style="font-size: 0.75rem; letter-spacing: 1px;">© 2026 JMARIN TECH - CALIDAD GARANTIZADA</p>
         </div>
     </div>
 </body>
@@ -350,15 +365,13 @@ app.get('/cat/:ids', (req, res) => {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; padding: 40px 20px; }
-        .card-vip { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; overflow: hidden; height: 100%; transition: 0.3s; position: relative; }
-        .card-vip:hover { transform: translateY(-5px); border-color: #10b981; background: rgba(255,255,255,0.05); }
-        .img-box { height: 220px; background: white; display: flex; align-items: center; justify-content: center; padding: 15px; }
-        .img-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
-        .price { color: #10b981; font-size: 1.8rem; font-weight: 800; }
-        .logo { max-width: 150px; margin-bottom: 30px; }
-        .spec-tag { background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; margin-right: 5px; margin-bottom: 5px; display: inline-block; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .badge-qty { position: absolute; top: 10px; right: 10px; background: #2563eb; color: white; padding: 5px 12px; border-radius: 12px; font-weight: 800; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; padding: 60px 20px; }
+        .deal-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .deal-card:hover { transform: translateY(-10px) scale(1.02); border-color: #10b981; background: rgba(255,255,255,0.05); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5); }
+        .deal-card:hover img { transform: scale(1.1); }
+        .mini-spec { background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 0.7rem; padding: 6px 12px; border-radius: 10px; font-weight: 500; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+        .logo { max-width: 180px; margin-bottom: 40px; filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.2)); }
+        h1 { font-size: 3rem; font-weight: 900; letter-spacing: -2px; }
     </style>
 </head>
 <body>
@@ -372,28 +385,31 @@ app.get('/cat/:ids', (req, res) => {
                 let specs = {};
                 try { specs = JSON.parse(deal.original_specs || '{}'); } catch(e){}
                 const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
-                const qty = qtyMatch ? qtyMatch[1] : null;
+                const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
 
                 return `
-                <div class="col-md-4">
-                    <div class="card-vip p-3">
-                        ${qty ? `<div class="badge-qty">X${qty} EQUIPOS</div>` : ''}
-                        <div class="img-box mb-3 rounded-4">
-                            <img src="${deal.image}" alt="">
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white deal-card" 
+                         onclick="window.location.href='/p/${deal.id}'"
+                         style="border: 1px solid rgba(255,255,255,0.05) !important; cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <div class="img-container bg-white p-4 position-relative" style="height: 280px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img src="${deal.image}" class="img-fluid" style="max-height: 100%; object-fit: contain; transition: transform 0.5s ease;">
+                            ${qty > 1 ? `<div class="position-absolute top-0 end-0 m-3"><span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.75rem; font-weight: 800; background: #2563eb !important;">X${qty} EQUIPOS</span></div>` : ''}
                         </div>
-                        <div class="text-start">
-                            <h5 class="mt-2 fw-bold text-white" style="font-size: 1rem; line-height: 1.4; height: 45px; overflow: hidden;">${deal.title}</h5>
+                        <div class="p-4 d-flex flex-column" style="background: linear-gradient(180deg, rgba(30,41,59,0) 0%, rgba(15,23,42,1) 100%);">
+                            <h6 class="fw-bold mb-3 text-white" style="font-size: 1rem; line-height: 1.4; min-height: 2.8em;">${deal.title}</h6>
                             
-                            <div class="my-3">
-                                ${specs.cpu ? `<span class="spec-tag"><i class="fa-solid fa-processor me-1"></i> ${specs.cpu}</span>` : ''}
-                                ${specs.gen ? `<span class="spec-tag"><i class="fa-solid fa-microchip me-1"></i> ${specs.gen}</span>` : ''}
-                                ${specs.ram ? `<span class="spec-tag"><i class="fa-solid fa-memory me-1"></i> ${specs.ram} RAM</span>` : ''}
-                                ${specs.ssd ? `<span class="spec-tag"><i class="fa-solid fa-hard-drive me-1"></i> ${specs.ssd}</span>` : ''}
-                                ${specs.year ? `<span class="spec-tag"><i class="fa-solid fa-calendar me-1"></i> ${specs.year}</span>` : ''}
-                                <span class="spec-tag"><i class="fa-solid fa-recycle me-1"></i> Refurbished</span>
+                            <div class="specs-grid-mini mb-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                ${specs.cpu ? `<div class="mini-spec"><i class="fa-solid fa-processor opacity-50 me-1"></i> ${specs.cpu}</div>` : ''}
+                                ${specs.ram ? `<div class="mini-spec"><i class="fa-solid fa-memory opacity-50 me-1"></i> ${specs.ram}</div>` : ''}
+                                ${specs.ssd ? `<div class="mini-spec"><i class="fa-solid fa-hard-drive opacity-50 me-1"></i> ${specs.ssd}</div>` : ''}
+                                <div class="mini-spec text-success" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-recycle me-1"></i> Refurbished</div>
                             </div>
 
-                            <div class="price mt-2">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <div class="price h3 fw-bold text-success mb-0" style="letter-spacing: -1px;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
+                                <div class="text-white-50 small">Ver detalles <i class="fa-solid fa-chevron-right ms-1" style="font-size: 0.7rem;"></i></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -401,13 +417,20 @@ app.get('/cat/:ids', (req, res) => {
             }).join('')}
         </div>
         
-        <div class="mt-5 pt-5 border-top border-secondary text-white-50">
-            <p class="fw-bold text-white">¿Te interesa algún lote?</p>
-            <p>Escríbenos directamente para confirmar disponibilidad y separar tu pedido.</p>
-            <a href="https://wa.me/573012722472" class="btn btn-success btn-lg px-5 rounded-pill fw-bold mt-2">CONTACTAR AHORA</a>
-            <a href="https://jmarintech.onrender.com" class="btn btn-outline-light btn-lg px-5 rounded-pill mt-3" style="font-size: 0.9rem;">🏪 Ver más ofertas</a>
-            <p class="small mt-4">© 2026 JMARIN TECH - Importaciones Directas USA</p>
+        <div class="mt-5 py-5 text-center border-top border-secondary">
+            <h4 class="fw-bold text-white mb-3">💎 ¿Interesado en estas ofertas?</h4>
+            <p class="text-white-50 mb-4 mx-auto" style="max-width: 500px;">Nuestros lotes premium se agotan rápido. Escríbenos ahora para asegurar tu pedido con el mejor precio del mercado.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="https://wa.me/573012722472" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-lg" style="background: #10b981; border: none;">
+                    <i class="fa-brands fa-whatsapp me-2"></i> CONTACTAR AHORA
+                </a>
+                <a href="https://jmarintech.onrender.com" class="btn btn-outline-light btn-lg px-5 rounded-pill fw-bold" style="border: 1px solid rgba(255,255,255,0.2);">
+                    🏪 VOLVER AL INICIO
+                </a>
+            </div>
+            <p class="small mt-5 text-white-50 opacity-50">© 2026 JMARIN TECH - IMPORTACIONES DIRECTAS USA</p>
         </div>
+    </div>
     </div>
 </body>
 </html>`;
