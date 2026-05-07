@@ -315,7 +315,7 @@ app.get('/p/:id', (req, res) => {
                 <span class="specs-badge">${deal.product_condition || 'Excelente'}</span>
                 <span class="specs-badge">Importación Directa</span>
             </div>
-            <a href="https://wa.me/573000000000?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
+            <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
                 ME INTERESA / SEPARAR
             </a>
             <p class="mt-4 xsmall text-white-50" style="font-size: 0.7rem;">© 2026 JMARIN TECH - Todos los derechos reservados</p>
@@ -401,7 +401,7 @@ app.get('/cat/:ids', (req, res) => {
         <div class="mt-5 pt-5 border-top border-secondary text-white-50">
             <p class="fw-bold text-white">¿Te interesa algún lote?</p>
             <p>Escríbenos directamente para confirmar disponibilidad y separar tu pedido.</p>
-            <a href="https://wa.me/573000000000" class="btn btn-success btn-lg px-5 rounded-pill fw-bold mt-2">CONTACTAR AHORA</a>
+            <a href="https://wa.me/573012722472" class="btn btn-success btn-lg px-5 rounded-pill fw-bold mt-2">CONTACTAR AHORA</a>
             <p class="small mt-4">© 2026 JMARIN TECH - Importaciones Directas USA</p>
         </div>
     </div>
