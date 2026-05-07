@@ -1370,11 +1370,26 @@ app.get('/api/admin/search', authMiddleware, async (req, res) => {
 
 // 7.4.9.1 BÚSQUEDA AVANZADA EBAY (CON ENVÍO)
 app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
-  const { q } = req.query;
+  const { q, condition } = req.query;
   if (!q) return res.status(400).json({ error: 'Query requerido' });
   try {
     const EbayAPI = require('./src/core/EbayAPIRadar');
-    const results = await EbayAPI.searchItems(q, 15);
+
+    // DETECTAR SI ES UN ENLACE DE EBAY
+    const ebayUrlMatch = q.match(/ebay\.com\/itm\/(\d+)/);
+    if (ebayUrlMatch) {
+      const itemId = ebayUrlMatch[1];
+      const result = await EbayAPI.getItemById(itemId);
+      if (result) {
+        return res.json({ success: true, results: [result] });
+      } else {
+        const results = await EbayAPI.searchItems(itemId, 5);
+        return res.json({ success: true, results });
+      }
+    }
+
+    // BÚSQUEDA NORMAL POR PALABRAS CLAVE (con filtro de condición opcional)
+    const results = await EbayAPI.searchItems(q, 15, condition || null);
     res.json({ success: true, results });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });

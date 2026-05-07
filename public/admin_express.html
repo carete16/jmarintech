@@ -643,14 +643,26 @@
             <div class="row align-items-center">
                 <div class="col-md-5">
                     <h5 class="fw-bold mb-1"><i class="fa-brands fa-ebay me-2" style="font-size: 1.5rem;"></i> Buscador eBay (Lotes)</h5>
-                    <p class="small text-white-50 mb-0">Busca lotes de laptops, precios con envío y genera mensajes para WhatsApp.</p>
+                    <p class="small text-white-50 mb-0">Busca lotes o pega un enlace directo de eBay. Filtra por condición.</p>
                 </div>
                 <div class="col-md-7">
-                    <div class="input-group">
+                    <div class="input-group mb-2">
                         <input type="text" id="ebaySearchQuery" class="form-control border-0 bg-dark text-white" 
-                               placeholder="Ej: lot 10 dell latitude refurbished..." style="border-radius: 15px 0 0 15px; border: 1px solid #059669 !important;">
+                               placeholder="Busca o pega un enlace de eBay..." style="border-radius: 15px 0 0 15px; border: 1px solid #059669 !important;"
+                               onkeydown="if(event.key==='Enter') searchEbay()">
                         <button onclick="searchEbay()" id="btnSearchEbay" class="btn btn-success px-4 fw-bold" 
-                                style="border-radius: 0 15px 15px 0; background: #10b981;">BUSCAR EN EBAY</button>
+                                style="border-radius: 0 15px 15px 0; background: #10b981;">BUSCAR</button>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <select id="ebayConditionFilter" class="form-select form-select-sm bg-dark text-white border-secondary" style="max-width: 200px; font-size: 0.75rem;">
+                            <option value="">🔍 Cualquier condición</option>
+                            <option value="CERTIFIED_REFURBISHED">✅ Certified Refurbished</option>
+                            <option value="EXCELLENT_REFURBISHED">⭐ Excelente (Refurb)</option>
+                            <option value="VERY_GOOD_REFURBISHED">👍 Muy Buena (Refurb)</option>
+                            <option value="GOOD_REFURBISHED">👌 Buena (Refurb)</option>
+                            <option value="USED">🔧 Usado</option>
+                        </select>
+                        <small class="text-white-50 align-self-center" style="font-size: 0.65rem;">💡 También puedes pegar un enlace de eBay directamente</small>
                     </div>
                 </div>
             </div>
@@ -878,8 +890,9 @@
 
         async function searchEbay() {
             const query = document.getElementById('ebaySearchQuery').value.trim();
-            if (!query) return alert("Ingresa un producto para eBay");
+            if (!query) return alert("Ingresa un producto o pega un enlace de eBay");
 
+            const condition = document.getElementById('ebayConditionFilter')?.value || '';
             const btn = document.getElementById('btnSearchEbay');
             const resultsDiv = document.getElementById('ebaySearchResults');
             const toolbar = document.getElementById('ebayToolbar');
@@ -888,7 +901,10 @@
             btn.disabled = true;
 
             try {
-                const res = await axios.get(API_URL + '/admin/ebay/search?q=' + encodeURIComponent(query), {
+                let url = API_URL + '/admin/ebay/search?q=' + encodeURIComponent(query);
+                if (condition) url += '&condition=' + encodeURIComponent(condition);
+
+                const res = await axios.get(url, {
                     headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
                 });
                 const results = res.data.results;
