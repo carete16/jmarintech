@@ -2003,11 +2003,26 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
             const originalPrice = (priceOffer * 1.25).toFixed(2);
             const savingsPercent = 20;
 
-            // 2. Título de Venta
+            // 2. Título de Venta (Estandarizado)
+            const brandMatch = title.match(/^(Apple|Dell|HP|Lenovo|Samsung|Asus|Acer|Microsoft|Sony|MSI|Alienware|Logitech|Razer)/i);
+            const brand = brandMatch ? brandMatch[0] : title.split(' ')[0];
+            
+            // Frases de urgencia rotativas
+            const urgencies = ["¡OFERTA LIMITADA!", "¡OPORTUNIDAD ÚNICA!", "¡APROVECHA AHORA!", "¡ULTIMA HORA!", "¡CALIDAD PREMIUM!"];
+            const urgency = urgencies[Math.floor(Math.random() * urgencies.length)];
+
+            let specsArr = [];
+            if (specs.cpu) specsArr.push(specs.cpu.substring(0, 20));
+            if (specs.ram) specsArr.push(specs.ram);
+            if (specs.disk) specsArr.push(specs.disk);
+            
+            let specsStr = specsArr.join(' | ');
             let sellingTitle = `¡SUPER PRECIO! ${title}`;
-            if (specs.cpu || specs.ram) {
-                const brand = title.split(' ')[0];
-                sellingTitle = `${brand} ${specs.cpu || ''} | ${specs.ram || ''} | ${specs.disk || ''} - ¡OFERTA LIMITADA!`;
+            
+            if (specsStr) {
+                sellingTitle = `${brand} ${specsStr} - ${urgency}`;
+            } else {
+                sellingTitle = `${title.substring(0, 50)} - ${urgency}`;
             }
 
             // 3. Beneficios
