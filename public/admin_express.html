@@ -661,23 +661,23 @@
                 <div class="row g-2 mb-3 pb-3 border-bottom border-secondary">
                     <div class="col-4 col-md-2">
                         <label class="xsmall fw-bold text-white-50">TAX (%)</label>
-                        <input type="number" id="ebayLocalTax" class="form-control form-control-sm bg-dark text-white border-secondary" value="7" oninput="recalculateEbayPrices()">
+                        <input type="number" id="ebayLocalTax" class="form-control form-control-sm bg-dark text-white border-secondary" value="7" oninput="recalculateEbayPrices(true)">
                     </div>
                     <div class="col-4 col-md-2">
                         <label class="xsmall fw-bold text-white-50">PESO (LBS)</label>
-                        <input type="number" id="ebayLocalWeight" class="form-control form-control-sm bg-dark text-white border-secondary" value="5" oninput="recalculateEbayPrices()">
+                        <input type="number" id="ebayLocalWeight" class="form-control form-control-sm bg-dark text-white border-secondary" value="5" oninput="recalculateEbayPrices(true)">
                     </div>
                     <div class="col-4 col-md-2">
                         <label class="xsmall fw-bold text-white-50">$/LIBRA</label>
-                        <input type="number" id="ebayLocalRate" class="form-control form-control-sm bg-dark text-white border-secondary" value="6" oninput="recalculateEbayPrices()">
+                        <input type="number" id="ebayLocalRate" class="form-control form-control-sm bg-dark text-white border-secondary" value="6" oninput="recalculateEbayPrices(true)">
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="xsmall fw-bold text-white-50">GANANCIA (%)</label>
-                        <input type="number" id="ebayLocalProfit" class="form-control form-control-sm bg-dark text-white border-secondary" value="30" oninput="recalculateEbayPrices()">
+                        <input type="number" id="ebayLocalProfit" class="form-control form-control-sm bg-dark text-white border-secondary" value="30" oninput="recalculateEbayPrices(true)">
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="xsmall fw-bold text-white-50">DOLAR (TRM)</label>
-                        <input type="number" id="ebayLocalTrm" class="form-control form-control-sm bg-dark text-white border-secondary" value="3950" oninput="recalculateEbayPrices()">
+                        <input type="number" id="ebayLocalTrm" class="form-control form-control-sm bg-dark text-white border-secondary" value="3950" oninput="recalculateEbayPrices(true)">
                     </div>
                 </div>
 
@@ -920,7 +920,7 @@
             }
         }
 
-        function recalculateEbayPrices() {
+        function recalculateEbayPrices(resetOverrides = false) {
             const resultsDiv = document.getElementById('ebaySearchResults');
             if (!currentEbayResults.length) return;
 
@@ -933,9 +933,9 @@
             resultsDiv.innerHTML = '';
             
             currentEbayResults.forEach((item, idx) => {
-                // Si el item no tiene overrides, inicializar con globales
-                if (item.overrideWeight === undefined) item.overrideWeight = globalWeight;
-                if (item.overrideProfit === undefined) item.overrideProfit = globalProfit;
+                // Si resetOverrides es true, forzamos a usar los globales
+                if (resetOverrides || item.overrideWeight === undefined) item.overrideWeight = globalWeight;
+                if (resetOverrides || item.overrideProfit === undefined) item.overrideProfit = globalProfit;
 
                 const qtyMatch = item.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
                 const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
@@ -949,24 +949,50 @@
                 item.calculatedCOP = totalCOP;
                 item.calculatedUSD = totalUSDWithProfit.toFixed(2);
                 item.qty = qty;
-                item.totalWeight = totalWeight;
 
                 const breakdown = `Cost: $${item.price} + Ship: $${item.shipping} | Tax: +$${(costUSD - (item.price + item.shipping)).toFixed(2)} | Flete: +$${freightUSD.toFixed(2)} | Profit: +$${(totalUSDWithProfit - (costUSD + freightUSD)).toFixed(2)}`;
 
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';
                 col.innerHTML = `
-                                <div class="small fw-bold text-white mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height:1.2; font-size:0.75rem; padding-right:20px;">${item.title}</div>
-                                <div class="d-flex flex-column gap-0">
-                                    <div class="text-white-50 xsmall">Costo eBay: $${(item.price + item.shipping).toFixed(2)}</div>
-                                    <div class="text-success fw-bold" style="font-size:1.1rem;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(totalCOP)}</div>
-                                    <div class="text-white-50 xsmall">Final Cliente (aprox)</div>
-                                </div>
-                                <div class="d-flex gap-1 mt-2">
-                                    <button onclick="shareEbayItem(${idx})" class="btn btn-success btn-sm py-1 flex-grow-1" style="font-size:0.6rem; background:#10b981"><i class="fa-brands fa-whatsapp"></i> ENVIAR</button>
-                                    <button onclick="importEbayItem(${idx})" class="btn btn-outline-light btn-sm py-1" style="font-size:0.6rem">IMPORTAR</button>
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-dark text-white p-3 mb-3" style="border: 1px solid rgba(255,255,255,0.1) !important;">
+                        <div class="d-flex gap-3 mb-2">
+                            <div class="position-relative" style="min-width: 80px;">
+                                <img src="${item.image || 'https://placehold.co/80'}" class="rounded-3" style="width: 80px; height: 80px; object-fit: cover; background: white;">
+                                <input type="checkbox" class="form-check-input ebay-item-check position-absolute top-0 start-0 m-1" data-idx="${idx}" checked onchange="updateEbayCount()" style="width: 20px; height: 20px; border: 2px solid #10b981;">
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h6 class="text-white small fw-bold mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; font-size: 0.75rem;">${item.title}</h6>
+                                <div class="xsmall text-white-50">Costo eBay: $${(item.price + item.shipping).toFixed(2)}</div>
+                                <div class="price-display mt-1" title="${breakdown}" style="cursor: help;">
+                                    <span class="text-success fw-bold h5 mb-0">$ ${totalCOP.toLocaleString()}</span>
+                                    <div class="xsmall text-muted" style="font-size: 0.6rem;">Final Cliente (aprox) ⓘ</div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-2 border-top border-secondary pt-2">
+                             <div class="col-6">
+                                <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">PESO UNIT (LBS)</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" 
+                                       value="${item.overrideWeight}" onchange="currentEbayResults[${idx}].overrideWeight = parseFloat(this.value); recalculateEbayPrices(false)"
+                                       style="font-size: 0.7rem; padding: 2px 5px; height: 25px;">
+                             </div>
+                             <div class="col-6">
+                                <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">GANANCIA (%)</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" 
+                                       value="${item.overrideProfit * 100}" onchange="currentEbayResults[${idx}].overrideProfit = parseFloat(this.value)/100; recalculateEbayPrices(false)"
+                                       style="font-size: 0.7rem; padding: 2px 5px; height: 25px;">
+                             </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button onclick="shareEbayItem(${idx})" class="btn btn-success btn-sm flex-grow-1 fw-bold rounded-3 py-1" style="font-size: 0.7rem;">
+                                <i class="fa-brands fa-whatsapp"></i> ENVIAR
+                            </button>
+                            <button onclick="importEbayItem(${idx})" class="btn btn-outline-light btn-sm fw-bold rounded-3 py-1" style="font-size: 0.65rem;">
+                                IMPORTAR
+                            </button>
                         </div>
                     </div>
                 `;
