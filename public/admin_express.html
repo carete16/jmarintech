@@ -924,40 +924,38 @@
             const resultsDiv = document.getElementById('ebaySearchResults');
             if (!currentEbayResults.length) return;
 
-            const tax = (parseFloat(document.getElementById('ebayLocalTax').value) / 100) + 1;
-            const unitWeight = parseFloat(document.getElementById('ebayLocalWeight').value) || 0;
-            const ratePerLb = parseFloat(document.getElementById('ebayLocalRate').value) || 0;
-            const profitPercent = (parseFloat(document.getElementById('ebayLocalProfit').value) || 0) / 100;
+            const globalTax = (parseFloat(document.getElementById('ebayLocalTax').value) / 100) + 1;
+            const globalWeight = parseFloat(document.getElementById('ebayLocalWeight').value) || 0;
+            const globalRate = parseFloat(document.getElementById('ebayLocalRate').value) || 0;
+            const globalProfit = (parseFloat(document.getElementById('ebayLocalProfit').value) || 0) / 100;
             const trm = parseFloat(document.getElementById('ebayLocalTrm').value) || 1;
 
             resultsDiv.innerHTML = '';
             
             currentEbayResults.forEach((item, idx) => {
-                // DETECTAR CANTIDAD EN EL TÍTULO (Lote de X)
+                // Si el item no tiene overrides, inicializar con globales
+                if (item.overrideWeight === undefined) item.overrideWeight = globalWeight;
+                if (item.overrideProfit === undefined) item.overrideProfit = globalProfit;
+
                 const qtyMatch = item.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
                 const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
-                const totalWeight = qty * unitWeight;
+                const totalWeight = qty * item.overrideWeight;
 
-                const costUSD = (item.price + item.shipping) * tax;
-                const freightUSD = totalWeight * ratePerLb;
-                const totalUSDWithProfit = (costUSD + freightUSD) * (1 + profitPercent);
+                const costUSD = (item.price + item.shipping) * globalTax;
+                const freightUSD = totalWeight * globalRate;
+                const totalUSDWithProfit = (costUSD + freightUSD) * (1 + item.overrideProfit);
                 const totalCOP = Math.round(totalUSDWithProfit * trm);
 
                 item.calculatedCOP = totalCOP;
                 item.calculatedUSD = totalUSDWithProfit.toFixed(2);
-                item.qty = qty; // Guardar para referencia
+                item.qty = qty;
                 item.totalWeight = totalWeight;
+
+                const breakdown = `Cost: $${item.price} + Ship: $${item.shipping} | Tax: +$${(costUSD - (item.price + item.shipping)).toFixed(2)} | Flete: +$${freightUSD.toFixed(2)} | Profit: +$${(totalUSDWithProfit - (costUSD + freightUSD)).toFixed(2)}`;
 
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';
                 col.innerHTML = `
-                    <div class="card bg-dark border-success p-3 h-100" style="border: 1px solid #059669 !important; background: rgba(0,0,0,0.3) !important; position:relative;">
-                        <div style="position:absolute; top:10px; right:10px; z-index:10;">
-                            <input type="checkbox" class="form-check-input ebay-item-check" data-idx="${idx}" onchange="updateEbayCount()" style="width:22px; height:22px; cursor:pointer; border: 2px solid #10b981;">
-                        </div>
-                        <div class="d-flex gap-3 align-items-start">
-                            <img src="${item.image || 'https://placehold.co/100'}" style="width:70px; height:70px; object-fit:contain; border-radius:10px; background:white;">
-                            <div style="flex:1">
                                 <div class="small fw-bold text-white mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height:1.2; font-size:0.75rem; padding-right:20px;">${item.title}</div>
                                 <div class="d-flex flex-column gap-0">
                                     <div class="text-white-50 xsmall">Costo eBay: $${(item.price + item.shipping).toFixed(2)}</div>
