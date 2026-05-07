@@ -306,8 +306,13 @@ app.get('/p/:id', (req, res) => {
             }
         }
 
-        const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
-        const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+        let qty = 1;
+        if (specs.qty && !isNaN(parseInt(specs.qty))) {
+            qty = parseInt(specs.qty);
+        } else {
+            const qtyMatch = deal.title.match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+            qty = qtyMatch ? parseInt(qtyMatch[1] || qtyMatch[2] || qtyMatch[3]) : 1;
+        }
         const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -461,8 +466,13 @@ app.get('/cat/:ids', (req, res) => {
                     if (ssdMatch) specs.ssd = ssdMatch[0].replace('STORAGE', 'SSD');
                 }
 
-                const qtyMatch = title.match(/LOT\s*(?:OF|X)?\s*(\d+)/i);
-                const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+                let qty = 1;
+                if (specs.qty && !isNaN(parseInt(specs.qty))) {
+                    qty = parseInt(specs.qty);
+                } else {
+                    const qtyMatch = title.match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                    qty = qtyMatch ? parseInt(qtyMatch[1] || qtyMatch[2] || qtyMatch[3]) : 1;
+                }
 
                 return `
                 <div class="col-md-6 col-lg-4 mb-4">

@@ -974,8 +974,9 @@
                 if (resetOverrides || item.overrideWeight === undefined) item.overrideWeight = globalWeight;
                 if (resetOverrides || item.overrideProfit === undefined) item.overrideProfit = globalProfit;
 
-                const qtyMatch = item.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
-                const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+                const qtyMatch = item.title.match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                let qty = qtyMatch ? parseInt(qtyMatch[1]||qtyMatch[2]||qtyMatch[3]) : 1;
+                if (item.overrideQty !== undefined) qty = item.overrideQty;
                 const totalWeight = qty * item.overrideWeight;
 
                 const costUSD = (item.price + item.shipping) * globalTax;
@@ -1025,13 +1026,19 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                         </div>
                         
                         <div class="row g-2 mb-2 border-top border-secondary pt-2">
-                             <div class="col-6">
-                                <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">PESO UNIT (LBS)</label>
+                             <div class="col-4">
+                                <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">CANTIDAD</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" 
+                                       value="${qty}" onchange="currentEbayResults[${idx}].overrideQty = parseInt(this.value) || 1; recalculateEbayPrices(false)"
+                                       style="font-size: 0.7rem; padding: 2px 5px; height: 25px;" min="1">
+                             </div>
+                             <div class="col-4">
+                                <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">PESO (LBS)</label>
                                 <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" 
                                        value="${item.overrideWeight}" onchange="currentEbayResults[${idx}].overrideWeight = parseFloat(this.value); recalculateEbayPrices(false)"
                                        style="font-size: 0.7rem; padding: 2px 5px; height: 25px;">
                              </div>
-                             <div class="col-6">
+                             <div class="col-4">
                                 <label class="xsmall text-white-50 d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">GANANCIA (%)</label>
                                 <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" 
                                        value="${item.overrideProfit * 100}" onchange="currentEbayResults[${idx}].overrideProfit = parseFloat(this.value)/100; recalculateEbayPrices(false)"
@@ -1155,7 +1162,7 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                     price: item.calculatedUSD || data.price || 0,
                     weight: item.overrideWeight || data.weight || 0,
                     category: data.categoria || 'Lotes',
-                    title: item.title || data.title,
+                    title: (item.overrideQty && item.overrideQty > 1 && !(item.title||data.title).match(/\[QTY:/i)) ? `[QTY: ${item.overrideQty}] ` + (item.title || data.title) : (item.title || data.title),
                     image: item.image || data.image,
                     store: 'eBay USA',
                     specs: `ESTADO: ${data.condition || item.condition || 'Usado'} | ` + (data.features || data.specs || ''),
@@ -1488,13 +1495,22 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                                     <label class="xsmall fw-bold text-muted">Título de Venta (Persuasivo)</label>
                                     <input type="text" id="selling-title-${item.id}" value="${item.selling_title || ''}" class="form-control form-control-sm" placeholder="Ej: ¡Súper Oferta! Dell Latitude..." oninput="updateRow('${item.id}')">
                                 </div>
-                                <div class="col-6">
-                                    <label class="xsmall fw-bold text-muted">Precio Original (USD)</label>
+                                <div class="col-4">
+                                    <label class="xsmall fw-bold text-muted">Precio Original</label>
                                     <input type="number" id="original-price-${item.id}" value="${item.original_price || ''}" class="form-control form-control-sm" placeholder="0.00" oninput="updateRow('${item.id}')">
                                 </div>
-                                <div class="col-6">
+                                <div class="col-4">
                                     <label class="xsmall fw-bold text-muted">Badge / Etiqueta</label>
                                     <input type="text" id="badge-${item.id}" value="${item.badge || ''}" class="form-control form-control-sm" placeholder="Ej: TOP VENTAS" oninput="updateRow('${item.id}')">
+                                </div>
+                                <div class="col-4">
+                                    <label class="xsmall fw-bold text-muted">Cantidad Lote</label>
+                                    <input type="number" id="qty-${item.id}" value="${(() => {
+                                        let s = {}; try { s = JSON.parse(item.structured_specs||'{}'); } catch(e){}
+                                        if(s.qty) return s.qty;
+                                        const qtyMatch = (item.title||'').match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                                        return qtyMatch ? parseInt(qtyMatch[1]||qtyMatch[2]||qtyMatch[3]) : 1;
+                                    })()}" class="form-control form-control-sm text-primary fw-bold" min="1" oninput="updateRow('${item.id}')">
                                 </div>
                                 <div class="col-6 d-none">
                                     <label class="xsmall fw-bold text-muted">Ahorro (%)</label>
@@ -1839,6 +1855,12 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 const originalSpecs = document.getElementById(`specs-${id}`).value || '';
                 const structuredSpecs = document.getElementById(`structured-specs-${id}`).value || null;
 
+                let sJSON = {};
+                try { sJSON = JSON.parse(structuredSpecs || '{}'); } catch(e){}
+                const manualQty = parseInt(document.getElementById(`qty-${id}`)?.value);
+                if (!isNaN(manualQty) && manualQty > 1) sJSON.qty = manualQty; else delete sJSON.qty;
+                const finalStructuredSpecs = JSON.stringify(sJSON);
+
                 const response = await axios.post(API_URL + '/admin/express/update', {
                     id,
                     title,
@@ -1851,7 +1873,7 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                     custom_dolar: customDolar,
                     custom_profit_percent: customProfit,
                     original_specs: originalSpecs,
-                    structured_specs: structuredSpecs,
+                    structured_specs: finalStructuredSpecs,
                     // Nuevos campos
                     selling_title: document.getElementById(`selling-title-${id}`).value,
                     original_price: document.getElementById(`original-price-${id}`).value,
