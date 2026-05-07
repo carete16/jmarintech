@@ -1562,7 +1562,10 @@ app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
       try {
         const urlObj = new URL(q.startsWith('http') ? q : 'https://www.ebay.com/sch/?' + q);
         const nkw = urlObj.searchParams.get('_nkw');
-        if (nkw) q = nkw.replace(/\+/g, ' ');
+        if (nkw) {
+            q = nkw.replace(/\+/g, ' ');
+            q = q.replace(/\blaptos\b/ig, 'laptops'); // Auto-corregir typo común porque la API es estricta
+        }
         
         categoryId = urlObj.searchParams.get('_dcat') || urlObj.pathname.match(/\/sch\/(\d+)\//)?.[1];
         
@@ -1570,6 +1573,20 @@ app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
             const val = urlObj.searchParams.get(key);
             if (val) aspectFilters[key] = val.split('|');
         });
+
+        // Extraer la condición directamente del enlace si existe
+        const lhCond = urlObj.searchParams.get('LH_ItemCondition');
+        if (lhCond) {
+            const condMapUrl = {
+                '1000': 'NEW',
+                '2000': 'CERTIFIED_REFURBISHED',
+                '2010': 'EXCELLENT_REFURBISHED',
+                '2020': 'VERY_GOOD_REFURBISHED',
+                '2030': 'GOOD_REFURBISHED',
+                '3000': 'USED'
+            };
+            if (condMapUrl[lhCond]) condition = condMapUrl[lhCond];
+        }
       } catch(e) {}
       
       const results = await EbayAPI.searchItems(q, 15, { condition, categoryId, aspectFilters });

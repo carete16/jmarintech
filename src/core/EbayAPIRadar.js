@@ -149,13 +149,14 @@ class EbayAPIRadar {
             if (condition) {
                 const condMap = {
                     'CERTIFIED_REFURBISHED': '2000',
-                    'EXCELLENT_REFURBISHED': '2500',
-                    'VERY_GOOD_REFURBISHED': '2500',
-                    'GOOD_REFURBISHED': '2500',
+                    'EXCELLENT_REFURBISHED': '2010',
+                    'VERY_GOOD_REFURBISHED': '2020',
+                    'GOOD_REFURBISHED': '2030',
                     'USED': '3000',
                     'NEW': '1000'
                 };
-                if (condMap[condition]) filter += `,conditions:{${condMap[condition]}}`;
+                const finalCond = condMap[condition] || (!isNaN(condition) ? condition : null);
+                if (finalCond) filter += `,conditionIds:{${finalCond}}`;
             }
 
             // Inyectar Category IDs y Aspect Filters
