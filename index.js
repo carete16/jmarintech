@@ -523,8 +523,17 @@ app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
         
         // Información técnica estructurada (JSON)
         const structuredSpecs = JSON.stringify(item.specs || {});
-        // Texto legible para el usuario (No JSON)
-        const displaySpecs = item.condition ? `Condición: ${item.condition}` : '';
+        
+        // Construir texto legible basado en las nuevas specs enriquecidas
+        let displaySpecs = item.condition ? `ESTADO: ${item.condition}` : '';
+        if (item.specs) {
+            const s = item.specs;
+            if (s.cpu) displaySpecs += ` | Processor: ${s.cpu}`;
+            if (s.ram) displaySpecs += ` | RAM: ${s.ram}`;
+            if (s.ssd) displaySpecs += ` | Storage: ${s.ssd}`;
+            if (s.screen) displaySpecs += ` | Screen: ${s.screen}`;
+            if (s.full && s.full.length > 50) displaySpecs += ` | Info: ${s.full.substring(0, 500)}...`;
+        }
 
         db.prepare(`
             INSERT OR REPLACE INTO published_deals 

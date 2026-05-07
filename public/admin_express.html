@@ -998,6 +998,12 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                                     <span class="text-success fw-bold h5 mb-0">$ ${totalCOP.toLocaleString()}</span>
                                     <div class="xsmall text-muted" style="font-size: 0.6rem;">Final Cliente (aprox) ⓘ</div>
                                 </div>
+                                ${item.specs ? `
+                                <div class="d-flex gap-1 mt-2 flex-wrap">
+                                    ${item.specs.cpu ? `<span class="badge bg-secondary" style="font-size:0.5rem; background:rgba(255,255,255,0.1) !important;">${item.specs.cpu.substring(0,12)}</span>` : ''}
+                                    ${item.specs.ram ? `<span class="badge bg-primary" style="font-size:0.5rem; background:#2563eb !important;">${item.specs.ram}</span>` : ''}
+                                    ${item.specs.ssd ? `<span class="badge bg-info text-dark" style="font-size:0.5rem; background:#38bdf8 !important;">${item.specs.ssd}</span>` : ''}
+                                </div>` : ''}
                             </div>
                         </div>
                         

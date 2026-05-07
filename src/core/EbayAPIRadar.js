@@ -130,18 +130,32 @@ class EbayAPIRadar {
 
     /**
      * Busca productos en eBay usando palabras clave.
-     * Ideal para "lotes" o búsquedas específicas.
+     * MEJORADO: Ahora obtiene los detalles completos de cada item para tener specs reales.
      */
-    async searchItems(query, limit = 10) {
+    async searchItems(query, limit = 15, condition = null) {
         const token = await this.getToken();
         if (!token) return [];
 
         try {
             logger.info(`📡 [EBAY Search] Buscando: "${query}" (límite: ${limit})...`);
+            
+            let filter = 'buyingOptions:{FIXED_PRICE}';
+            if (condition) {
+                const condMap = {
+                    'CERTIFIED_REFURBISHED': '2000',
+                    'EXCELLENT_REFURBISHED': '2500',
+                    'VERY_GOOD_REFURBISHED': '2500',
+                    'GOOD_REFURBISHED': '2500',
+                    'USED': '3000',
+                    'NEW': '1000'
+                };
+                if (condMap[condition]) filter += `,conditions:{${condMap[condition]}}`;
+            }
+
             const resp = await axios.get(
                 `https://api.ebay.com/buy/browse/v1/item_summary/search`,
                 {
-                    params: { q: query, limit: limit, filter: 'buyingOptions:{FIXED_PRICE}' },
+                    params: { q: query, limit: limit, filter: filter },
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
@@ -150,31 +164,38 @@ class EbayAPIRadar {
                 }
             );
 
-            const items = resp.data.itemSummaries || [];
-            logger.info(`✅ [EBAY Search] Se encontraron ${items.length} resultados.`);
+            const summaries = resp.data.itemSummaries || [];
+            logger.info(`✅ [EBAY Search] Se encontraron ${summaries.length} resultados. Obteniendo detalles completos...`);
 
-            return items.map(item => {
-                const title = item.title;
-                const ram = title.match(/(\d+)GB?\s*(RAM|DDR)/i)?.[1] || '';
-                const ssd = title.match(/(\d+)(GB|TB)?\s*(SSD|NVME|DISK|HDD)/i)?.[0] || '';
-                const cpu = title.match(/(i[3579]|Ryzen\s*\d|Apple\s*M\d)/i)?.[0] || '';
-                
-                return {
-                    id: item.itemId.split('|')[1] || item.itemId,
-                    title: title,
-                    price: parseFloat(item.price?.value || 0),
-                    currency: item.price?.currency || 'USD',
-                    image: item.image?.imageUrl || '',
-                    shipping: parseFloat(item.shippingOptions?.[0]?.shippingCost?.value || 0),
-                    condition: item.condition || 'Used',
-                    link: item.itemWebUrl,
-                    specs: {
-                        ram: ram ? ram + 'GB' : '',
-                        ssd: ssd,
-                        cpu: cpu
-                    }
-                };
+            // OBTENER DETALLES COMPLETOS EN PARALELO (Limitado a 10 para no saturar)
+            const detailPromises = summaries.slice(0, 10).map(async (s) => {
+                const itemId = s.itemId.split('|')[1] || s.itemId;
+                const details = await this.getItemById(itemId);
+                if (details) {
+                    return {
+                        id: itemId,
+                        title: details.title || s.title,
+                        price: details.price || parseFloat(s.price?.value || 0),
+                        currency: s.price?.currency || 'USD',
+                        image: details.image || s.image?.imageUrl || '',
+                        shipping: parseFloat(s.shippingOptions?.[0]?.shippingCost?.value || 0),
+                        condition: details.condition || s.condition || 'Used',
+                        link: s.itemWebUrl,
+                        specs: {
+                            ram: details.ram || '',
+                            ssd: details.disk || '',
+                            cpu: details.processor || '',
+                            screen: details.screen || '',
+                            full: details.specs || ''
+                        }
+                    };
+                }
+                return null;
             });
+
+            const results = (await Promise.all(detailPromises)).filter(r => r !== null);
+            return results;
+
         } catch (e) {
             logger.error(`❌ [EBAY Search] Error: ${e.response?.data?.errors?.[0]?.message || e.message}`);
             return [];
