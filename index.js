@@ -280,7 +280,32 @@ app.get('/p/:id', (req, res) => {
         
         const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop);
         
-        const html = `<!DOCTYPE html>
+        // AUTO-DETECCIÓN DE SPECS DESDE EL TÍTULO (Si no existen en DB)
+        let specs = {};
+        try { specs = JSON.parse(deal.structured_specs || '{}'); } catch(e){}
+        
+        if (!specs.cpu || !specs.ram) {
+            const title = deal.title.toUpperCase();
+            if (!specs.cpu) {
+                const cpuMatch = title.match(/(I\d[- ]\d{4,5}[A-Z]?|RYZEN \d[- ]\d{4}[A-Z]?|CELERON|PENTIUM|M\d|APPLE M1|APPLE M2|APPLE M3)/i);
+                if (cpuMatch) specs.cpu = cpuMatch[0];
+            }
+            if (!specs.gen) {
+                const genMatch = title.match(/(\d+)(?:TH|ND|RD|ST)\s*(?:GEN)/i);
+                if (genMatch) specs.gen = genMatch[1] + "ª Gen";
+            }
+            if (!specs.ram) {
+                const ramMatch = title.match(/(\d+)\s*(?:GB|G)\s*(?:RAM|DDR)/i);
+                if (ramMatch) specs.ram = ramMatch[1] + "GB";
+            }
+            if (!specs.ssd) {
+                const ssdMatch = title.match(/(\d+)\s*(?:GB|TB|G|T)\s*(?:SSD|NVME|HDD|SATA|STORAGE)/i);
+                if (ssdMatch) specs.ssd = ssdMatch[0].replace('STORAGE', 'SSD');
+            }
+        }
+
+        const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
+        const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -416,8 +441,24 @@ app.get('/cat/:ids', (req, res) => {
         <div class="row g-4">
             ${deals.map(deal => {
                 let specs = {};
-                try { specs = JSON.parse(deal.original_specs || '{}'); } catch(e){}
-                const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
+                try { specs = JSON.parse(deal.structured_specs || '{}'); } catch(e){}
+                
+                // AUTO-DETECCIÓN DE SPECS PARA CATÁLOGO
+                const title = (deal.title || '').toUpperCase();
+                if (!specs.cpu) {
+                    const cpuMatch = title.match(/(I\d[- ]\d{4,5}[A-Z]?|RYZEN \d[- ]\d{4}[A-Z]?|CELERON|PENTIUM|M\d|APPLE M1|APPLE M2|APPLE M3)/i);
+                    if (cpuMatch) specs.cpu = cpuMatch[0];
+                }
+                if (!specs.ram) {
+                    const ramMatch = title.match(/(\d+)\s*(?:GB|G)\s*(?:RAM|DDR)/i);
+                    if (ramMatch) specs.ram = ramMatch[1] + "GB";
+                }
+                if (!specs.ssd) {
+                    const ssdMatch = title.match(/(\d+)\s*(?:GB|TB|G|T)\s*(?:SSD|NVME|HDD|SATA|STORAGE)/i);
+                    if (ssdMatch) specs.ssd = ssdMatch[0].replace('STORAGE', 'SSD');
+                }
+
+                const qtyMatch = title.match(/LOT\s*(?:OF|X)?\s*(\d+)/i);
                 const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
 
                 return `
@@ -433,7 +474,7 @@ app.get('/cat/:ids', (req, res) => {
                             <h6 class="fw-bold mb-3 text-white" style="font-size: 1rem; line-height: 1.4; min-height: 2.8em;">${deal.title}</h6>
                             
                             <div class="specs-grid-mini mb-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                ${specs.cpu ? `<div class="mini-spec"><i class="fa-solid fa-processor opacity-50 me-1"></i> ${specs.cpu}</div>` : ''}
+                                ${specs.cpu ? `<div class="mini-spec"><i class="fa-solid fa-microchip opacity-50 me-1"></i> ${specs.cpu}</div>` : ''}
                                 ${specs.ram ? `<div class="mini-spec"><i class="fa-solid fa-memory opacity-50 me-1"></i> ${specs.ram}</div>` : ''}
                                 ${specs.ssd ? `<div class="mini-spec"><i class="fa-solid fa-hard-drive opacity-50 me-1"></i> ${specs.ssd}</div>` : ''}
                                 <div class="mini-spec text-success" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-recycle me-1"></i> Refurbished</div>
