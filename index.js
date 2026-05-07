@@ -1370,21 +1370,35 @@ app.get('/api/admin/search', authMiddleware, async (req, res) => {
 
 // 7.4.9.1 BÚSQUEDA AVANZADA EBAY (CON ENVÍO)
 app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
-  const { q, condition } = req.query;
+  let { q, condition } = req.query;
   if (!q) return res.status(400).json({ error: 'Query requerido' });
   try {
     const EbayAPI = require('./src/core/EbayAPIRadar');
 
-    // DETECTAR SI ES UN ENLACE DE EBAY
-    const ebayUrlMatch = q.match(/ebay\.com\/itm\/(\d+)/);
-    if (ebayUrlMatch) {
-      const itemId = ebayUrlMatch[1];
+    // DETECTAR SI ES UN ENLACE DE PRODUCTO EBAY (/itm/ID)
+    const ebayItemMatch = q.match(/ebay\.com\/itm\/(\d+)/);
+    if (ebayItemMatch) {
+      const itemId = ebayItemMatch[1];
       const result = await EbayAPI.getItemById(itemId);
-      if (result) {
-        return res.json({ success: true, results: [result] });
-      } else {
-        const results = await EbayAPI.searchItems(itemId, 5);
-        return res.json({ success: true, results });
+      if (result) return res.json({ success: true, results: [result] });
+      const results = await EbayAPI.searchItems(itemId, 5);
+      return res.json({ success: true, results });
+    }
+
+    // DETECTAR SI ES UN ENLACE DE BÚSQUEDA EBAY (?_nkw=... o /sch/...)
+    const isEbayUrl = q.includes('ebay.com') || q.includes('_nkw=');
+    if (isEbayUrl) {
+      try {
+        // Si no tiene http, añadirlo para poder parsearlo
+        const fullUrl = q.startsWith('http') ? q : 'https://www.ebay.com/sch/?' + q;
+        const urlObj = new URL(fullUrl);
+        const nkw = urlObj.searchParams.get('_nkw');
+        if (nkw) {
+          q = nkw.replace(/\+/g, ' '); // Convertir "laptops+refurbished" → "laptops refurbished"
+          console.log(`[eBay URL Detected] Extrayendo keywords: "${q}"`);
+        }
+      } catch(e) {
+        // Si falla el parse, continuar con q original
       }
     }
 
