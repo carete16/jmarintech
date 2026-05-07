@@ -291,54 +291,87 @@ app.get('/p/:id', (req, res) => {
     <meta property="og:image" content="${deal.image}">
     <meta property="og:url" content="https://jmarintech.onrender.com/p/${deal.id}">
     <meta property="og:type" content="product">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .card-vip { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; overflow: hidden; max-width: 800px; width: 100%; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
-        .img-box { background: white; padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 400px; }
-        .img-box img { width: 100%; height: 100%; object-fit: contain; max-height: 600px; transition: transform 0.5s ease; }
-        .img-box:hover img { transform: scale(1.05); }
-        .price { color: #10b981; font-size: 3.5rem; font-weight: 900; margin: 15px 0; letter-spacing: -1px; }
-        .logo { max-width: 150px; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); }
-        .specs-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 20px; border-radius: 15px; font-size: 0.9rem; margin: 5px; display: inline-block; font-weight: 600; }
-        .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; text-align: left; }
-        .spec-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .spec-label { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 2px; }
-        .spec-value { font-size: 1rem; font-weight: 700; color: white; }
+        :root { --primary: #10b981; --dark: #0f172a; --light-bg: #f8fafc; }
+        body { background: var(--light-bg); color: #1e293b; font-family: 'Inter', system-ui, -apple-system, sans-serif; padding: 20px; }
+        .main-card { background: white; border-radius: 24px; overflow: hidden; max-width: 600px; width: 100%; margin: 20px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.05); position: relative; }
+        .img-wrapper { position: relative; width: 100%; background: white; padding: 20px; }
+        .img-wrapper img { width: 100%; height: auto; border-radius: 12px; }
+        .badge-recommended { position: absolute; top: 30px; right: 30px; background: white; color: #0f172a; padding: 6px 16px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-qty { position: absolute; top: 30px; left: 30px; background: #2563eb; color: white; padding: 6px 16px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+        .status-badge { background: #10b981; color: white; display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-left: 20px; margin-top: -10px; position: relative; z-index: 10; box-shadow: 0 4px 12px rgba(16,185,129,0.2); }
+        .content { padding: 30px; }
+        .product-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 25px; line-height: 1.3; }
+        .spec-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
+        .spec-item { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; color: #64748b; font-size: 0.95rem; font-weight: 500; }
+        .spec-item i { width: 24px; color: #94a3b8; font-size: 1.1rem; text-align: center; }
+        .price-tag { font-size: 2.8rem; font-weight: 900; color: #0f172a; margin-bottom: 30px; letter-spacing: -1px; }
+        .payment-box { background: #f1f5f9; border-radius: 16px; padding: 20px; margin-bottom: 25px; }
+        .payment-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
+        .payment-grid { display: flex; gap: 20px; font-size: 0.85rem; font-weight: 700; color: #475569; }
+        .delivery-info { display: flex; gap: 15px; justify-content: center; font-size: 0.8rem; color: #64748b; margin-bottom: 30px; font-weight: 500; }
+        .btn-cta { background: #10b981; color: white; width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; font-size: 1.1rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s; box-shadow: 0 10px 25px rgba(16,185,129,0.3); }
+        .btn-cta:hover { transform: translateY(-2px); color: white; }
+        .footer-logo { max-width: 120px; margin: 40px auto; display: block; opacity: 0.5; }
     </style>
 </head>
 <body>
-    <img src="/images/logo-jmarin-tech.png" class="logo" onerror="this.style.display='none'">
-    <div class="card-vip">
-        <div class="img-box">
-            <img src="${deal.image}" alt="">
+    <div class="main-card">
+        <div class="img-wrapper">
+            <div class="badge-recommended"><i class="fa-solid fa-shield-check me-1"></i> RECOMENDADO</div>
+            ${qty > 1 ? `<div class="badge-qty">X${qty} EQUIPOS</div>` : ''}
+            <img src="${deal.image}" alt="${deal.title}">
         </div>
-        <div class="p-5 text-center">
-            <h1 class="h3 fw-bold mb-4" style="color: #f8fafc;">${deal.title}</h1>
+        <div class="status-badge">
+            <span style="width: 10px; height: 10px; background: white; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1.5s infinite;"></span>
+            Disponible bajo pedido
+        </div>
+        
+        <div class="content">
+            <h1 class="product-title">${deal.title}</h1>
             
-            <div class="spec-grid">
-                ${specs.cpu ? `<div class="spec-item"><span class="spec-label">Procesador</span><span class="spec-value">${specs.cpu}</span></div>` : ''}
-                ${specs.gen ? `<div class="spec-item"><span class="spec-label">Generación</span><span class="spec-value">${specs.gen}</span></div>` : ''}
-                ${specs.ram ? `<div class="spec-item"><span class="spec-label">Memoria RAM</span><span class="spec-value">${specs.ram}</span></div>` : ''}
-                ${specs.ssd ? `<div class="spec-item"><span class="spec-label">Almacenamiento</span><span class="spec-value">${specs.ssd}</span></div>` : ''}
+            <ul class="spec-list">
+                ${specs.screen ? `<li class="spec-item"><i class="fa-solid fa-laptop"></i> ${specs.screen}</li>` : ''}
+                ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu} ${specs.gen || ''}</li>` : ''}
+                ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram} RAM</li>` : ''}
+                ${specs.ssd ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.ssd} Almacenamiento</li>` : ''}
+                <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #0f172a; margin-left: 5px;">Refurbished</b></li>
+                <li class="spec-item"><i class="fa-solid fa-plane-arrival"></i> Importación Directa USA</li>
+                <li class="spec-item"><i class="fa-solid fa-check-double"></i> Calidad Inspeccionada</li>
+            </ul>
+
+            <div class="price-tag">${priceStr}</div>
+
+            <div class="payment-box">
+                <div class="payment-title">Medios de Pago</div>
+                <div class="payment-grid">
+                    <span><i class="fa-solid fa-building-columns me-1" style="color: #10b981;"></i> 0%</span>
+                    <span><i class="fa-solid fa-credit-card me-1" style="color: #2563eb;"></i> +10%</span>
+                    <span>50% Anticipo</span>
+                </div>
             </div>
 
-            <div class="price">${priceStr}</div>
-            <div class="mb-5">
-                <span class="specs-badge">Refurbished</span>
-                <span class="specs-badge">Importación Directa</span>
-                ${specs.year ? `<span class="specs-badge">${specs.year}</span>` : ''}
+            <div class="delivery-info">
+                <span>🚀 Importado bajo pedido</span>
+                <span>⌛ Entrega: 10-15 días</span>
             </div>
-            
-            <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-lg" style="font-size: 1.1rem; background: #10b981; border: none;">
-                <i class="fa-brands fa-whatsapp me-2"></i> ME INTERESA / SEPARAR
+
+            <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn-cta">
+                <i class="fa-brands fa-whatsapp"></i> ME INTERESA / SEPARAR
             </a>
-            <a href="https://jmarintech.onrender.com" class="btn btn-outline-light w-100 py-3 mt-3 rounded-pill fw-bold" style="font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2);">
-                🏫 Ver más ofertas en JMARIN TECH
-            </a>
-            <p class="mt-5 xsmall text-white-50" style="font-size: 0.75rem; letter-spacing: 1px;">© 2026 JMARIN TECH - CALIDAD GARANTIZADA</p>
         </div>
     </div>
+    
+    <img src="/images/logo-jmarin-tech.png" class="footer-logo" onerror="this.style.display='none'">
+
+    <style>
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
 </body>
 </html>`;
         res.send(html);
