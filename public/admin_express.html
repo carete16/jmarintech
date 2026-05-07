@@ -616,6 +616,11 @@
                     style="font-size: 0.7rem; display: none;">
                     <i class="fa-solid fa-trash-can me-1"></i> BORRAR PENDIENTES
                 </button>
+                <button onclick="recalculateAllPrices()" id="btnRecalculatePrices"
+                    class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm"
+                    style="font-size: 0.7rem; display: none;">
+                    <i class="fa-solid fa-calculator me-1"></i> RECALCULAR PRECIOS
+                </button>
                 <button onclick="runHealthCheck()"
                     class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-3 shadow-sm"
                     style="font-size: 0.7rem; background: white;">
@@ -791,9 +796,12 @@
                     loadData(); // Cargar datos de la pestaña (Deals)
                 }
 
-                // Botón de limpiar pendientes
+                // Botones especiales por pestaña
                 const btnClear = document.getElementById('btnClearPending');
                 if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
+
+                const btnRecalculate = document.getElementById('btnRecalculatePrices');
+                if (btnRecalculate) btnRecalculate.style.display = (tab === 'published') ? 'block' : 'none';
 
             } catch (err) {
                 console.error("Error al cambiar de pestaña:", err);
@@ -2778,6 +2786,66 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 }
             } catch (e) {
                 alert("❌ ERROR EN SINCRONIZACIÓN: " + (e.response?.data?.error || e.message));
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        async function recalculateAllPrices() {
+            if (!confirm("⚠️ ¿Deseas RECALCULAR los precios COP de TODAS las publicaciones activas?\n\nSe aplicará el Dólar, Ganancia, Tax y Envío actual, incluyendo la nueva lógica de peso total para lotes.")) return;
+            
+            const btn = document.getElementById('btnRecalculatePrices');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CALCULANDO...';
+            btn.disabled = true;
+
+            try {
+                const res = await axios.get(API_URL + '/admin/express/published', {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                const items = res.data;
+                let count = 0;
+
+                for (const item of items) {
+                    const priceUSD = parseFloat(item.price_offer) || 0;
+                    const weightUnit = parseFloat(item.weight) || 0;
+                    
+                    let structured = {};
+                    try { structured = JSON.parse(item.structured_specs || '{}'); } catch(e){}
+                    let qty = structured.qty || 1;
+                    if (!structured.qty) {
+                         const qtyMatch = (item.title || '').match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                         qty = qtyMatch ? parseInt(qtyMatch[1]||qtyMatch[2]||qtyMatch[3]) : 1;
+                    }
+
+                    const calc = calculateFinal(priceUSD, weightUnit * qty, item.custom_dolar, item.custom_profit_percent);
+                    
+                    if (calc) {
+                        await axios.post(API_URL + '/admin/express/update', {
+                            id: item.id,
+                            title: item.title,
+                            price_offer: item.price_offer,
+                            weight: item.weight,
+                            price_cop: calc.finalCOP,
+                            categoria: item.categoria,
+                            image: item.image,
+                            product_condition: item.product_condition,
+                            structured_specs: item.structured_specs,
+                            selling_title: item.selling_title,
+                            original_price: item.original_price,
+                            savings: item.savings,
+                            benefits: item.benefits ? (typeof item.benefits === 'string' ? JSON.parse(item.benefits) : item.benefits) : [],
+                            badge: item.badge,
+                            marketPriceCOP: item.market_price_cop
+                        }, { headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' } });
+                        count++;
+                    }
+                }
+                alert(`✅ ¡Éxito! Se han actualizado ${count} publicaciones con los nuevos cálculos.`);
+                loadData();
+            } catch (e) {
+                alert("❌ Error: " + (e.response?.data?.error || e.message));
             } finally {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
