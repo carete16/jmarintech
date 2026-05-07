@@ -345,44 +345,63 @@ app.get('/cat/:ids', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Exclusivo | JMARIN TECH</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; padding: 40px 20px; }
-        .card-vip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; height: 100%; transition: 0.3s; }
-        .card-vip:hover { transform: translateY(-5px); border-color: #10b981; }
-        .img-box { height: 200px; background: white; display: flex; align-items: center; justify-content: center; padding: 15px; }
+        .card-vip { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; overflow: hidden; height: 100%; transition: 0.3s; position: relative; }
+        .card-vip:hover { transform: translateY(-5px); border-color: #10b981; background: rgba(255,255,255,0.05); }
+        .img-box { height: 220px; background: white; display: flex; align-items: center; justify-content: center; padding: 15px; }
         .img-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
-        .price { color: #10b981; font-size: 1.5rem; font-weight: bold; }
+        .price { color: #10b981; font-size: 1.8rem; font-weight: 800; }
         .logo { max-width: 150px; margin-bottom: 30px; }
-        .badge-status { background: #10b981; color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 5px; text-transform: uppercase; }
+        .spec-tag { background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; margin-right: 5px; margin-bottom: 5px; display: inline-block; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-qty { position: absolute; top: 10px; right: 10px; background: #2563eb; color: white; padding: 5px 12px; border-radius: 12px; font-weight: 800; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
     </style>
 </head>
 <body>
     <div class="container text-center">
         <img src="/images/logo-jmarin-tech.png" class="logo" onerror="this.style.display='none'">
-        <h1 class="fw-bold mb-2">💎 Catálogo Exclusivo</h1>
-        <p class="text-white-50 mb-5">Ofertas seleccionadas disponibles para pedido inmediato</p>
+        <h1 class="fw-bold mb-2">💎 Catálogo Premium</h1>
+        <p class="text-white-50 mb-5">Lotes de tecnología seleccionados por JMARIN TECH</p>
         
         <div class="row g-4">
-            ${deals.map(deal => `
+            ${deals.map(deal => {
+                let specs = {};
+                try { specs = JSON.parse(deal.original_specs || '{}'); } catch(e){}
+                const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
+                const qty = qtyMatch ? qtyMatch[1] : null;
+
+                return `
                 <div class="col-md-4">
                     <div class="card-vip p-3">
-                        <div class="img-box mb-3 rounded-3">
+                        ${qty ? `<div class="badge-qty">X${qty} EQUIPOS</div>` : ''}
+                        <div class="img-box mb-3 rounded-4">
                             <img src="${deal.image}" alt="">
                         </div>
                         <div class="text-start">
-                            <span class="badge-status">Disponible</span>
-                            <h5 class="mt-2 fw-bold" style="font-size: 0.9rem; height: 40px; overflow: hidden;">${deal.title}</h5>
+                            <h5 class="mt-2 fw-bold text-white" style="font-size: 1rem; line-height: 1.4; height: 45px; overflow: hidden;">${deal.title}</h5>
+                            
+                            <div class="my-3">
+                                ${specs.cpu ? `<span class="spec-tag"><i class="fa-solid fa-processor me-1"></i> ${specs.cpu}</span>` : ''}
+                                ${specs.ram ? `<span class="spec-tag"><i class="fa-solid fa-memory me-1"></i> ${specs.ram} RAM</span>` : ''}
+                                ${specs.ssd ? `<span class="spec-tag"><i class="fa-solid fa-hard-drive me-1"></i> ${specs.ssd}</span>` : ''}
+                                <span class="spec-tag"><i class="fa-solid fa-star me-1"></i> ${deal.product_condition || 'Usado'}</span>
+                            </div>
+
                             <div class="price mt-2">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
-                            <p class="xsmall text-white-50 mt-1 mb-0" style="font-size: 0.7rem;">Incluye impuestos y envío a Colombia</p>
+                            <p class="xsmall text-white-50 mt-1 mb-0" style="font-size: 0.75rem; font-weight: 500;">Precio final con impuestos y envío</p>
                         </div>
                     </div>
                 </div>
-            `).join('')}
+                `;
+            }).join('')}
         </div>
         
         <div class="mt-5 pt-5 border-top border-secondary text-white-50">
-            <p>Escríbenos para separar tu equipo con el 50% de anticipo.</p>
-            <p class="small">© 2026 JMARIN TECH - Todos los derechos reservados</p>
+            <p class="fw-bold text-white">¿Te interesa algún lote?</p>
+            <p>Escríbenos directamente para confirmar disponibilidad y separar tu pedido.</p>
+            <a href="https://wa.me/573000000000" class="btn btn-success btn-lg px-5 rounded-pill fw-bold mt-2">CONTACTAR AHORA</a>
+            <p class="small mt-4">© 2026 JMARIN TECH - Importaciones Directas USA</p>
         </div>
     </div>
 </body>
@@ -398,11 +417,14 @@ app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
     try {
         const { item } = req.body;
         const usdPrice = (parseFloat(item.price) || 0) + (parseFloat(item.shipping) || 0);
+        const specsStr = JSON.stringify(item.specs || {});
+
         db.prepare(`
             INSERT OR REPLACE INTO published_deals 
-            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología')
-        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link);
+            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria, original_specs, product_condition)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología', ?, ?)
+        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link, specsStr, item.condition);
+        
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
