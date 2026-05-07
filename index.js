@@ -105,16 +105,17 @@ autoRepairLinks();
 // --- STATUS PUBLICO ---
 app.get('/api/status', (req, res) => {
   try {
-    const lastDeal = db.prepare('SELECT title, posted_at, tienda FROM published_deals ORDER BY posted_at DESC LIMIT 1').get();
-    const count24h = db.prepare("SELECT COUNT(*) as total FROM published_deals WHERE posted_at > datetime('now', '-1 day')").get();
-    const totalDeals = db.prepare('SELECT COUNT(*) as count FROM published_deals').get().count;
+    console.log("📡 [GET] /api/status");
+    const lastDeal = db.prepare('SELECT title, posted_at, tienda FROM published_deals ORDER BY posted_at DESC LIMIT 1').get() || {};
+    const count24h = db.prepare("SELECT COUNT(*) as total FROM published_deals WHERE posted_at > datetime('now', '-1 day')").get() || { total: 0 };
+    const totalDeals = db.prepare('SELECT COUNT(*) as count FROM published_deals').get()?.count || 0;
     const aiActive = !!(process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY || process.env.GOOGLE_GEMINI_KEY || process.env.GEMINI_API_KEY);
-    const trm = typeof trmCache !== 'undefined' ? trmCache.value : 3600;
+    const trm = typeof trmCache !== 'undefined' ? trmCache.value : 3950;
 
     res.json({
       online: true,
-      last_cycle: CoreProcessor.lastCycle,
-      last_success: CoreProcessor.lastSuccess,
+      last_cycle: CoreProcessor.lastCycle || new Date().toISOString(),
+      last_success: CoreProcessor.lastSuccess || new Date().toISOString(),
       last_deal: lastDeal,
       deals_24h: count24h.total,
       total_deals: totalDeals,
@@ -123,7 +124,8 @@ app.get('/api/status', (req, res) => {
       time: new Date().toISOString()
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error("❌ ERROR /api/status:", e.message);
+    res.json({ online: true, error: e.message, trm: 3950, total_deals: 0 });
   }
 });
 

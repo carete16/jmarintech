@@ -761,16 +761,16 @@
         function switchTab(tab) {
             try {
                 currentTab = tab;
-                console.log("Tab:", tab);
+                console.log("Tab Activa:", tab);
 
-                // Forzar visibilidad
                 const mainContainer = document.getElementById('main-container');
                 const ebaySection = document.getElementById('ebay-section');
                 
-                // Reset de botones
-                ['pending', 'published', 'archived', 'ebay'].forEach(t => {
-                    const el = document.getElementById(`tab-${t}`);
-                    if (el) el.classList.toggle('active', tab === t);
+                // Actualizar estado visual de los botones
+                const tabButtons = ['pending', 'published', 'archived', 'ebay'];
+                tabButtons.forEach(id => {
+                    const btn = document.getElementById(`tab-${id}`);
+                    if (btn) btn.classList.toggle('active', tab === id);
                 });
 
                 if (tab === 'ebay') {
@@ -784,14 +784,19 @@
                         ebaySection.classList.add('d-none');
                         ebaySection.style.display = 'none';
                     }
-                    if (mainContainer) mainContainer.classList.remove('d-none');
-                    loadData();
+                    if (mainContainer) {
+                        mainContainer.classList.remove('d-none');
+                        mainContainer.style.display = 'block';
+                    }
+                    loadData(); // Cargar datos de la pestaña (Deals)
                 }
 
+                // Botón de limpiar pendientes
                 const btnClear = document.getElementById('btnClearPending');
                 if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
+
             } catch (err) {
-                console.error("Error switchTab:", err);
+                console.error("Error al cambiar de pestaña:", err);
             }
         }
 
@@ -2737,23 +2742,31 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
 
         function init() {
             try {
-                console.log("🚀 Iniciando Admin...");
+                console.log("⚡ [START] Inicializando Aplicación...");
                 loadConfig();
                 
-                // Carga asíncrona sin bloquear
-                fetchTRM();
-                loadData();
+                // Carga no-bloqueante
+                setTimeout(() => {
+                    fetchTRM();
+                    loadData();
+                    updateHealth();
+                }, 100);
+
+                // Intervalo de salud
+                setInterval(updateHealth, 30000);
+                setInterval(fetchTRM, 60000);
                 
-                setInterval(fetchTRM, 60 * 1000);
+                console.log("🚀 [READY] Panel Administrativo Activo.");
             } catch (err) {
-                console.error("Error init:", err);
+                console.error("❌ ERROR EN INIT:", err);
             }
         }
 
-        // Hacer switchTab disponible globalmente de inmediato
+        // Exponer funciones críticas al objeto window
         window.switchTab = switchTab;
+        window.init = init;
 
-        // Inicializar cuando el DOM esté listo
+        // Ejecutar al cargar
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
