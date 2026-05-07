@@ -2735,16 +2735,30 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
             }
         }
 
-        function init() {
-            loadConfig();
-            fetchTRM();
-            loadData();
-            // 🔄 Auto-actualizar TRM cada 60 segundos
-            setInterval(fetchTRM, 60 * 1000);
+        async function init() {
+            try {
+                console.log("🚀 Iniciando JMARIN TECH Admin...");
+                loadConfig();
+                
+                // Cargas paralelas para mayor velocidad
+                await Promise.all([
+                    fetchTRM().catch(e => console.error("Error TRM:", e)),
+                    loadData().catch(e => console.error("Error Data:", e))
+                ]);
+                
+                // 🔄 Auto-actualizar TRM cada 60 segundos
+                setInterval(fetchTRM, 60 * 1000);
+                console.log("✅ Sistema listo.");
+            } catch (err) {
+                console.error("Error crítico en init:", err);
+            }
         }
 
-        // Inicializar
-        init();
+        // Hacer switchTab disponible globalmente de inmediato
+        window.switchTab = switchTab;
+
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 
