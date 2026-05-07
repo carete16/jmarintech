@@ -758,40 +758,40 @@
             if (event.target == modal) closeZoom();
         }
 
-        async function switchTab(tab) {
+        function switchTab(tab) {
             try {
                 currentTab = tab;
-                console.log("Cambiando a pestaña:", tab);
+                console.log("Tab:", tab);
 
-                // Actualizar estados de botones
-                const tabs = ['pending', 'published', 'archived', 'ebay'];
-                tabs.forEach(t => {
+                // Forzar visibilidad
+                const mainContainer = document.getElementById('main-container');
+                const ebaySection = document.getElementById('ebay-section');
+                
+                // Reset de botones
+                ['pending', 'published', 'archived', 'ebay'].forEach(t => {
                     const el = document.getElementById(`tab-${t}`);
                     if (el) el.classList.toggle('active', tab === t);
                 });
-                
-                const mainContainer = document.getElementById('main-container');
-                const ebaySection = document.getElementById('ebay-section');
-                const btnClear = document.getElementById('btnClearPending');
-                
+
                 if (tab === 'ebay') {
-                    if (mainContainer) mainContainer.style.display = 'none';
+                    if (mainContainer) mainContainer.classList.add('d-none');
                     if (ebaySection) {
-                        ebaySection.style.display = 'block';
                         ebaySection.classList.remove('d-none');
+                        ebaySection.style.display = 'block';
                     }
                 } else {
-                    if (mainContainer) mainContainer.style.display = 'block';
                     if (ebaySection) {
-                        ebaySection.style.display = 'none';
                         ebaySection.classList.add('d-none');
+                        ebaySection.style.display = 'none';
                     }
-                    await loadData();
+                    if (mainContainer) mainContainer.classList.remove('d-none');
+                    loadData();
                 }
 
+                const btnClear = document.getElementById('btnClearPending');
                 if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
             } catch (err) {
-                console.error("Error al cambiar pestaña:", err);
+                console.error("Error switchTab:", err);
             }
         }
 
@@ -2735,22 +2735,18 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
             }
         }
 
-        async function init() {
+        function init() {
             try {
-                console.log("🚀 Iniciando JMARIN TECH Admin...");
+                console.log("🚀 Iniciando Admin...");
                 loadConfig();
                 
-                // Cargas paralelas para mayor velocidad
-                await Promise.all([
-                    fetchTRM().catch(e => console.error("Error TRM:", e)),
-                    loadData().catch(e => console.error("Error Data:", e))
-                ]);
+                // Carga asíncrona sin bloquear
+                fetchTRM();
+                loadData();
                 
-                // 🔄 Auto-actualizar TRM cada 60 segundos
                 setInterval(fetchTRM, 60 * 1000);
-                console.log("✅ Sistema listo.");
             } catch (err) {
-                console.error("Error crítico en init:", err);
+                console.error("Error init:", err);
             }
         }
 
