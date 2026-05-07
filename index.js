@@ -1502,24 +1502,69 @@ app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
       return res.json({ success: true, results });
     }
 
-    // DETECTAR SI ES UN ENLACE DE BÚSQUEDA EBAY (?_nkw=... o /sch/...)
+    // DETECTAR SI ES UN ENLACE DE BÚSQUEDA EBAY COMPLETO (?_nkw=... o /sch/...)
     const isEbayUrl = q.includes('ebay.com') || q.includes('_nkw=');
     if (isEbayUrl) {
       try {
-        // Si no tiene http, añadirlo para poder parsearlo
         const fullUrl = q.startsWith('http') ? q : 'https://www.ebay.com/sch/?' + q;
-        const urlObj = new URL(fullUrl);
-        const nkw = urlObj.searchParams.get('_nkw');
-        if (nkw) {
-          q = nkw.replace(/\+/g, ' '); // Convertir "laptops+refurbished" → "laptops refurbished"
-          console.log(`[eBay URL Detected] Extrayendo keywords: "${q}"`);
+        console.log(`[eBay URL Detected] Scraping URL exacta para respetar TODOS los filtros...`);
+        const axios = require('axios');
+        const cheerio = require('cheerio');
+        const htmlResp = await axios.get(fullUrl, { 
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            timeout: 15000
+        });
+        const $ = cheerio.load(htmlResp.data);
+        const itemIds = [];
+        $('.s-item__link').each((i, el) => {
+            const href = $(el).attr('href');
+            if (href) {
+                const match = href.match(/itm\/(\d+)/);
+                if (match && !itemIds.includes(match[1])) itemIds.push(match[1]);
+            }
+        });
+        
+        if (itemIds.length > 0) {
+            console.log(`[eBay Scraper] Extrayendo detalles de ${itemIds.slice(0,10).length} productos de la URL...`);
+            const detailPromises = itemIds.slice(0, 10).map(async (id) => {
+                const details = await EbayAPI.getItemById(id);
+                if (details) {
+                    return {
+                        id: id,
+                        title: details.title,
+                        price: details.price || 0,
+                        currency: 'USD',
+                        image: details.image || '',
+                        shipping: details.shipping || 0,
+                        condition: details.condition || 'Used',
+                        link: `https://www.ebay.com/itm/${id}`,
+                        specs: {
+                            ram: details.ram || '',
+                            ssd: details.disk || '',
+                            cpu: details.processor || '',
+                            screen: details.screen || '',
+                            full: details.specs || ''
+                        }
+                    };
+                }
+                return null;
+            });
+            const results = (await Promise.all(detailPromises)).filter(r => r !== null);
+            return res.json({ success: true, results });
         }
       } catch(e) {
-        // Si falla el parse, continuar con q original
+        console.error("[eBay Scraper Fallback] Falla al leer URL directa, usando keywords:", e.message);
       }
+      
+      // Fallback: extraer _nkw si el scraper falló
+      try {
+        const urlObj = new URL(q.startsWith('http') ? q : 'https://www.ebay.com/sch/?' + q);
+        const nkw = urlObj.searchParams.get('_nkw');
+        if (nkw) q = nkw.replace(/\+/g, ' ');
+      } catch(e) {}
     }
 
-    // BÚSQUEDA NORMAL POR PALABRAS CLAVE (con filtro de condición opcional)
+    // BÚSQUEDA NORMAL POR PALABRAS CLAVE (API de eBay)
     const results = await EbayAPI.searchItems(q, 15, condition || null);
     res.json({ success: true, results });
   } catch (e) {
