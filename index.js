@@ -312,7 +312,7 @@ app.get('/p/:id', (req, res) => {
             <h1 class="h4 fw-bold mb-3">${deal.title}</h1>
             <div class="price">${priceStr}</div>
             <div class="mb-4">
-                <span class="specs-badge">${deal.product_condition || 'Excelente'}</span>
+                <span class="specs-badge">Refurbished</span>
                 <span class="specs-badge">Importación Directa</span>
             </div>
             <a href="https://wa.me/573012722472?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
@@ -387,7 +387,7 @@ app.get('/cat/:ids', (req, res) => {
                                 ${specs.ram ? `<span class="spec-tag"><i class="fa-solid fa-memory me-1"></i> ${specs.ram} RAM</span>` : ''}
                                 ${specs.ssd ? `<span class="spec-tag"><i class="fa-solid fa-hard-drive me-1"></i> ${specs.ssd}</span>` : ''}
                                 ${specs.year ? `<span class="spec-tag"><i class="fa-solid fa-calendar me-1"></i> ${specs.year}</span>` : ''}
-                                <span class="spec-tag"><i class="fa-solid fa-star me-1"></i> ${deal.product_condition || 'Usado'}</span>
+                                <span class="spec-tag"><i class="fa-solid fa-recycle me-1"></i> Refurbished</span>
                             </div>
 
                             <div class="price mt-2">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
