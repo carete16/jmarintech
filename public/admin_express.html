@@ -2185,26 +2185,39 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
         }
 
         function parseEbaySpecs(title) {
-            const specs = { cpu: '', ram: '', ssd: '', year: '', gen: '' };
+            const specs = { cpu: '', ram: '', ssd: '', year: '', gen: '', screen: '' };
             
-            // Procesador y Generación
-            const cpuMatch = title.match(/(i\d[- ]\d{4,5}[a-z]?|Ryzen \d[- ]\d{4}[a-z]?|Celeron|Pentium|m\d)/i);
-            if (cpuMatch) specs.cpu = cpuMatch[0].toUpperCase();
-            
+            // Pantalla
+            const screenMatch = title.match(/(\d+(?:\.\d+)?)\s*(?:inch|in|["”])/i);
+            if (screenMatch) specs.screen = screenMatch[1] + '"';
+
+            // Procesador
+            const cpuPatterns = [
+                /(i\d[- ]\d{4,5}[a-z]?)/i,
+                /(Ryzen [3579][- ]\d{4}[a-z]?)/i,
+                /(Apple M\d(?: Pro| Max| Ultra)?)/i,
+                /(Celeron|Pentium|Xeon|m\d)/i
+            ];
+            for (let p of cpuPatterns) {
+                const m = title.match(p);
+                if (m) { specs.cpu = m[0].toUpperCase(); break; }
+            }
+
+            // Generación
             const genMatch = title.match(/(\d+)(?:th|nd|rd|st)\s*(?:Gen)/i);
             if (genMatch) specs.gen = genMatch[1] + "ª Gen";
 
             // RAM
-            const ramMatch = title.match(/(\d+)\s*(?:GB|G)\s*(?:RAM|DDR)/i);
+            const ramMatch = title.match(/(\d+)\s*(?:GB|G)\s*(?:RAM|DDR|Memory)/i);
             if (ramMatch) specs.ram = ramMatch[1] + "GB";
 
-            // Disco (SSD/HDD/NVMe)
-            const ssdMatch = title.match(/(\d+)\s*(?:GB|TB|G|T)\s*(?:SSD|NVME|HDD|SATA|Storage)/i);
-            if (ssdMatch) specs.ssd = ssdMatch[0].toUpperCase().replace('STORAGE', 'SSD');
+            // Disco
+            const diskMatch = title.match(/(\d+)\s*(?:GB|TB|G|T)\s*(?:SSD|NVME|HDD|Storage)/i);
+            if (diskMatch) specs.ssd = diskMatch ? diskMatch[0].toUpperCase().replace('STORAGE', 'SSD') : '';
 
-            // Año (4 dígitos empezando por 201 o 202)
-            const yearMatch = title.match(/(201\d|202\d)/);
-            if (yearMatch) specs.year = yearMatch[0];
+            // Año
+            const yearMatch = title.match(/(20\d{2})/);
+            if (yearMatch) specs.year = yearMatch[0] || '';
 
             return specs;
         }

@@ -319,7 +319,7 @@ app.get('/p/:id', (req, res) => {
 <body>
     <div class="main-card">
         <div class="img-wrapper">
-            <div class="badge-recommended"><i class="fa-solid fa-shield-check me-1"></i> RECOMENDADO</div>
+            <div class="badge-recommended"><i class="fa-solid fa-crown me-1"></i> SELECCIÓN ELITE</div>
             ${qty > 1 ? `<div class="badge-qty">X${qty} EQUIPOS</div>` : ''}
             <img src="${deal.image}" alt="${deal.title}">
         </div>
@@ -335,8 +335,8 @@ app.get('/p/:id', (req, res) => {
                 ${specs.screen ? `<li class="spec-item"><i class="fa-solid fa-laptop"></i> ${specs.screen}</li>` : ''}
                 ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu} ${specs.gen || ''}</li>` : ''}
                 ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram} RAM</li>` : ''}
-                ${specs.ssd ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.ssd} Almacenamiento</li>` : ''}
-                <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #0f172a; margin-left: 5px;">Refurbished</b></li>
+                ${(specs.ssd || specs.disk) ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.ssd || specs.disk} Almacenamiento</li>` : ''}
+                <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #0f172a; margin-left: 5px;">${deal.product_condition || 'Refurbished'}</b></li>
                 <li class="spec-item"><i class="fa-solid fa-plane-arrival"></i> Importación Directa USA</li>
                 <li class="spec-item"><i class="fa-solid fa-check-double"></i> Calidad Inspeccionada</li>
             </ul>
@@ -477,17 +477,37 @@ app.get('/cat/:ids', (req, res) => {
 app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
     try {
         const { item } = req.body;
-        const usdPrice = (parseFloat(item.price) || 0) + (parseFloat(item.shipping) || 0);
-        const specsStr = JSON.stringify(item.specs || {});
-
-        db.prepare(`
-            INSERT OR REPLACE INTO published_deals 
-            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria, original_specs, product_condition)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología', ?, ?)
-        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link, specsStr, item.condition);
+        console.log(`[eBay Sync] Recibido item ID: ${item.id} - ${item.title}`);
         
+        const usdPrice = (parseFloat(item.price) || 0) + (parseFloat(item.shipping) || 0);
+        const specsObj = item.specs || {};
+        const specsStr = JSON.stringify(specsObj);
+
+        // Guardar con status 'published' explícito
+        const result = db.prepare(`
+            INSERT OR REPLACE INTO published_deals 
+            (id, title, selling_title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria, original_specs, structured_specs, product_condition, benefits, badge)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología', ?, ?, ?, ?, ?)
+        `).run(
+            item.id, 
+            item.title, 
+            item.title,
+            item.image, 
+            item.calculatedCOP, 
+            usdPrice, 
+            item.link, 
+            item.link, 
+            specsStr, 
+            specsStr,
+            item.condition || 'Refurbished',
+            JSON.stringify(['Importación Directa USA', 'Calidad Inspeccionada']),
+            'SELECCIÓN ELITE'
+        );
+        
+        console.log(`[eBay Sync] ✅ Guardado exitoso. Cambios: ${result.changes}`);
         res.json({ success: true });
     } catch (e) {
+        console.error(`[eBay Sync] ❌ Error: ${e.message}`);
         res.status(500).json({ success: false, error: e.message });
     }
 });
