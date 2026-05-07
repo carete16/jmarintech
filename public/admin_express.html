@@ -1379,7 +1379,11 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                                 <label class="small fw-bold text-muted">📝 DESCRIPCIÓN Y NOTAS EXTRA (Opcional)</label>
                                 <button onclick="optimizeAll('${item.id}')" class="btn-ia-magic" style="background: #7c3aed; color: white;"><i class="fa-solid fa-sparkles"></i> OPTIMIZAR TODO</button>
                             </div>
-                            <textarea class="form-control xsmall border" rows="3" id="specs-${item.id}" placeholder="Pega aquí las especificaciones del sitio original..." style="font-size: 0.75rem; border-radius: 12px; background: #f8fafc;" oninput="detectConditionFromText('${item.id}'); updateRow('${item.id}')">${item.original_specs || item.specs || ''}</textarea>
+                            <textarea class="form-control xsmall border" rows="3" id="specs-${item.id}" placeholder="Pega aquí las especificaciones del sitio original..." style="font-size: 0.75rem; border-radius: 12px; background: #f8fafc;" oninput="detectConditionFromText('${item.id}'); updateRow('${item.id}')">${(() => {
+                                let s = item.original_specs || item.specs || '';
+                                if (s.trim().startsWith('{')) return ''; // No mostrar JSON en este campo
+                                return s;
+                            })()}</textarea>
                             <input type="hidden" id="structured-specs-${item.id}" value='${item.structured_specs || "{}"}'>
                         </div>
 
@@ -2169,9 +2173,9 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 }
             };
 
-            setIfValid(`spec-cpu-${id}`,    apiData.processor || '');
+            setIfValid(`spec-cpu-${id}`,    apiData.processor || apiData.cpu || '');
             setIfValid(`spec-ram-${id}`,    apiData.ram       || '');
-            setIfValid(`spec-disk-${id}`,   apiData.disk      || '');
+            setIfValid(`spec-disk-${id}`,   apiData.disk      || apiData.ssd || '');
             setIfValid(`spec-screen-${id}`, apiData.screen    || '');
 
             // Para velocidad de CPU, intentar extraerla del campo procesador si no vino separada

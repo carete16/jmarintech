@@ -520,13 +520,17 @@ app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
     try {
         const { item } = req.body;
         const usdPrice = (parseFloat(item.price) || 0) + (parseFloat(item.shipping) || 0);
-        const specsStr = JSON.stringify(item.specs || {});
+        
+        // Información técnica estructurada (JSON)
+        const structuredSpecs = JSON.stringify(item.specs || {});
+        // Texto legible para el usuario (No JSON)
+        const displaySpecs = item.condition ? `Condición: ${item.condition}` : '';
 
         db.prepare(`
             INSERT OR REPLACE INTO published_deals 
-            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria, original_specs, product_condition)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología', ?, ?)
-        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link, specsStr, item.condition);
+            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria, original_specs, structured_specs, product_condition)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología', ?, ?, ?)
+        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link, displaySpecs, structuredSpecs, item.condition);
         
         res.json({ success: true });
     } catch (e) {
