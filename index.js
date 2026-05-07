@@ -391,7 +391,6 @@ app.get('/cat/:ids', (req, res) => {
                             </div>
 
                             <div class="price mt-2">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
-                            <p class="xsmall text-white-50 mt-1 mb-0" style="font-size: 0.75rem; font-weight: 500;">Precio final con impuestos y envío</p>
                         </div>
                     </div>
                 </div>
