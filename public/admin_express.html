@@ -1345,7 +1345,18 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 const finalWeight = (itemWeight > 0) ? itemWeight : iaValue.weight;
                 const finalCat = (item.categoria && item.categoria !== 'General' && item.categoria !== 'Oferta') ? item.categoria : iaValue.cat;
 
-                const calc = calculateFinal(priceUSD, finalWeight, item.custom_dolar, item.custom_profit_percent);
+                let qty = 1;
+                try {
+                    let s = {}; try { s = JSON.parse(item.structured_specs||'{}'); } catch(e){}
+                    if(s.qty) qty = parseInt(s.qty);
+                    else {
+                        const qtyMatch = (item.title||'').match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                        if (qtyMatch) qty = parseInt(qtyMatch[1]||qtyMatch[2]||qtyMatch[3]);
+                    }
+                } catch(e) {}
+                if (isNaN(qty) || qty < 1) qty = 1;
+
+                const calc = calculateFinal(priceUSD, finalWeight * qty, item.custom_dolar, item.custom_profit_percent);
                 const isPending = currentTab === 'pending';
                 const isLive = item.status === 'published';
                 
@@ -1396,7 +1407,7 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                                 <input type="number" id="price-${item.id}" value="${priceUSD}" class="form-control fw-bold text-center border-primary shadow-sm" oninput="updateRow('${item.id}')" placeholder="0.00" style="font-size: 1.1rem;">
                             </div>
                             <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">PESO LBS <span class="badge bg-light text-primary border" style="font-size: 0.6rem;">🤖 IA + 📦 Caja</span></label>
+                                <label class="small fw-bold text-muted mb-1">PESO UNIT. (LBS) <span class="badge bg-light text-primary border" style="font-size: 0.6rem;">🤖 IA + 📦 Caja</span></label>
                                 <input type="text" id="weight-${item.id}" value="${finalWeight}" class="form-control fw-bold text-center" oninput="updateRow('${item.id}')" style="font-size: 1.1rem;">
                             </div>
                             <div class="col-md-4 d-none">
@@ -2409,7 +2420,16 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
             const customDolar = parseFloat(document.getElementById(`custom-dolar-${id}`).value) || 0;
             const customProfit = parseFloat(document.getElementById(`custom-profit-${id}`).value) || 0;
 
-            const calc = calculateFinal(p, w, customDolar, customProfit);
+            const manualQtyStr = document.getElementById(`qty-${id}`)?.value;
+            let qty = 1;
+            if (manualQtyStr) qty = parseInt(manualQtyStr) || 1;
+            else {
+                const titleStr = document.getElementById(`title-${id}`)?.value || '';
+                const qtyMatch = titleStr.match(/(?:LOT\s*(?:OF|X)?\s*(\d+)|^(\d+)\s*[xX]\b|\[QTY:\s*(\d+)\])/i);
+                if (qtyMatch) qty = parseInt(qtyMatch[1]||qtyMatch[2]||qtyMatch[3]) || 1;
+            }
+
+            const calc = calculateFinal(p, w * qty, customDolar, customProfit);
 
             // ACTUALIZACIÓN DE UI SEGÚN VALIDEZ
             const copDisplay = document.getElementById(`cop-${id}`);
