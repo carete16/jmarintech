@@ -2033,11 +2033,11 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
             if (specs.ram) specsArr.push(specs.ram);
             if (specs.disk) specsArr.push(specs.disk);
             
-            let specsStr = specsArr.join(' | ');
+            let specsJoined = specsArr.join(' | ');
             let sellingTitle = `¡SUPER PRECIO! ${title}`;
             
-            if (specsStr) {
-                sellingTitle = `${brand} ${specsStr} - ${urgency}`;
+            if (specsJoined) {
+                sellingTitle = `${brand} ${specsJoined} - ${urgency}`;
             } else {
                 sellingTitle = `${title.substring(0, 50)} - ${urgency}`;
             }
