@@ -925,7 +925,7 @@
             if (!currentEbayResults.length) return;
 
             const tax = (parseFloat(document.getElementById('ebayLocalTax').value) / 100) + 1;
-            const shippingLbs = parseFloat(document.getElementById('ebayLocalWeight').value) || 0;
+            const unitWeight = parseFloat(document.getElementById('ebayLocalWeight').value) || 0;
             const ratePerLb = parseFloat(document.getElementById('ebayLocalRate').value) || 0;
             const profitPercent = (parseFloat(document.getElementById('ebayLocalProfit').value) || 0) / 100;
             const trm = parseFloat(document.getElementById('ebayLocalTrm').value) || 1;
@@ -933,13 +933,20 @@
             resultsDiv.innerHTML = '';
             
             currentEbayResults.forEach((item, idx) => {
+                // DETECTAR CANTIDAD EN EL TÍTULO (Lote de X)
+                const qtyMatch = item.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
+                const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+                const totalWeight = qty * unitWeight;
+
                 const costUSD = (item.price + item.shipping) * tax;
-                const freightUSD = shippingLbs * ratePerLb;
+                const freightUSD = totalWeight * ratePerLb;
                 const totalUSDWithProfit = (costUSD + freightUSD) * (1 + profitPercent);
                 const totalCOP = Math.round(totalUSDWithProfit * trm);
 
                 item.calculatedCOP = totalCOP;
                 item.calculatedUSD = totalUSDWithProfit.toFixed(2);
+                item.qty = qty; // Guardar para referencia
+                item.totalWeight = totalWeight;
 
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';

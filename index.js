@@ -272,7 +272,7 @@ app.get('/api/deal/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// RUTA DINÁMICA PARA VISTA PREVIA EN WHATSAPP (SEO)
+// RUTA DINÁMICA PARA VISTA PREVIA Y LANDING INDIVIDUAL (SEO)
 app.get('/p/:id', (req, res) => {
     try {
         const deal = db.prepare("SELECT * FROM published_deals WHERE id = ?").get(req.params.id);
@@ -284,21 +284,42 @@ app.get('/p/:id', (req, res) => {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>${deal.title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${deal.title} | JMARIN TECH</title>
     <meta property="og:title" content="${deal.title}">
     <meta property="og:description" content="🔥 ¡OFERTA EXCLUSIVA! Precio: ${priceStr} - JMARIN TECH">
     <meta property="og:image" content="${deal.image}">
     <meta property="og:url" content="https://jmarintech.onrender.com/p/${deal.id}">
     <meta property="og:type" content="product">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>window.location.href = '/?deal=${deal.id}';</script>
-    <style>body{background:#0f172a;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}</style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .card-vip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; overflow: hidden; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .img-box { background: white; padding: 30px; display: flex; align-items: center; justify-content: center; }
+        .img-box img { max-width: 100%; height: auto; border-radius: 10px; }
+        .price { color: #10b981; font-size: 2.5rem; font-weight: 800; margin: 10px 0; }
+        .logo { max-width: 120px; position: absolute; top: 30px; }
+        .specs-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; margin: 5px; display: inline-block; }
+    </style>
 </head>
 <body>
-    <div style="text-align:center">
-        <h2>${deal.title}</h2>
-        <p>Redirigiendo a la oferta...</p>
+    <img src="/images/logo-jmarin-tech.png" class="logo" onerror="this.style.display='none'">
+    <div class="card-vip">
+        <div class="img-box">
+            <img src="${deal.image}" alt="">
+        </div>
+        <div class="p-4 text-center">
+            <h1 class="h4 fw-bold mb-3">${deal.title}</h1>
+            <div class="price">${priceStr}</div>
+            <div class="mb-4">
+                <span class="specs-badge">${deal.product_condition || 'Excelente'}</span>
+                <span class="specs-badge">Importación Directa</span>
+            </div>
+            <a href="https://wa.me/573000000000?text=${encodeURIComponent('Hola, me interesa este producto: ' + deal.title)}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
+                ME INTERESA / SEPARAR
+            </a>
+            <p class="mt-4 xsmall text-white-50" style="font-size: 0.7rem;">© 2026 JMARIN TECH - Todos los derechos reservados</p>
+        </div>
     </div>
 </body>
 </html>`;
