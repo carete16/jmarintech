@@ -213,22 +213,34 @@
         @media (max-width: 768px) {
             .premium-header .container {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
+                padding: 10px;
+                text-align: center;
             }
 
-            .logo-box {
-                width: 30px;
-                height: 30px;
+            .premium-header .d-flex.align-items-center.gap-3 {
+                flex-direction: column;
+                gap: 5px !important;
+            }
+
+            .premium-header .d-flex.flex-column.align-items-end {
+                align-items: center !important;
+                width: 100%;
+            }
+
+            .premium-header .d-flex.gap-2.align-items-center {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px !important;
             }
 
             .price-cop-display {
-                font-size: 2rem;
-                /* Ajuste móvil */
+                font-size: 1.8rem;
             }
 
             .img-container {
                 width: 100% !important;
-                height: 280px !important;
+                height: 250px !important;
             }
 
             .card-deal .row .col-md-2 {
@@ -242,16 +254,45 @@
             }
 
             .nav-pills-custom {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding-bottom: 15px;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 10px;
                 margin-bottom: 20px !important;
+                display: flex;
+            }
+
+            .nav-pills-custom .nav-item {
+                flex: 0 0 auto;
             }
 
             .nav-pills-custom .nav-link {
                 white-space: nowrap;
-                font-size: 0.85rem;
-                padding: 10px 18px;
+                font-size: 0.8rem;
+                padding: 8px 15px;
+            }
+
+            /* Stack action buttons next to tabs on mobile */
+            .d-flex.justify-content-between.align-items-center.mb-5 {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 15px;
+            }
+
+            .d-flex.gap-2 {
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .d-flex.gap-2 button {
+                flex: 1 1 auto;
+                min-width: 140px;
+                justify-content: center;
+            }
+            
+            .dashboard-params-row .col-6 {
+                margin-bottom: 10px;
             }
         }
 

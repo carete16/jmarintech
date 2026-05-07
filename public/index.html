@@ -116,6 +116,34 @@
             width: 100%;
         }
 
+        /* MOBILE NAV */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+        .logo-mobile img { height: 50px; object-fit: contain; }
+        .menu-toggle {
+            background: #f1f5f9;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* HERO SECTION */
         
         /* AMBIENT ORBS */
@@ -502,11 +530,29 @@
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; padding: 20px; }
-            .hero { padding: 40px 24px; }
-            .hero h1 { font-size: 1.8rem; }
+            .sidebar { 
+                left: -210px; 
+                transition: transform 0.3s ease;
+                display: flex;
+                box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            }
+            .sidebar.open { transform: translateX(210px); }
+            .mobile-nav { display: flex; }
+            .main-content { margin-left: 0; padding: 90px 16px 24px 16px; }
+            .hero { 
+                flex-direction: column; 
+                height: auto; 
+                padding: 40px 24px; 
+                gap: 30px;
+                text-align: center;
+            }
+            .hero-content { text-align: center; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { margin: 0 auto 25px auto; }
+            .hero-image { justify-content: center; width: 100%; }
+            .hero-image img { max-height: 250px; }
             .deals-grid { grid-template-columns: 1fr; }
+            .search-container { margin-bottom: 24px; }
         }
         /* MODAL VISTA EXPANDIDA */
         .modal-overlay {
@@ -567,7 +613,14 @@
 </head>
 <body><div class="orb orb-1"></div><div class="orb orb-2"></div>
 
-    <aside class="sidebar">
+    <header class="mobile-nav">
+        <div class="logo-mobile">
+            <img src="/images/logo-jmarin-tech.png" alt="JMARIN TECH">
+        </div>
+        <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
         <a href="/" class="logo" style="margin-bottom: 32px; justify-content: center; padding: 16px 0; display: flex;">
             <img src="/images/logo-jmarin-tech.png" alt="JMARIN TECH" style="width: 140px; height: 140px; object-fit: contain; mix-blend-mode: multiply;">
         </a>
@@ -620,6 +673,29 @@
     </main>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+            const icon = document.querySelector('.menu-toggle i');
+            if (sidebar.classList.contains('open')) {
+                icon.classList.replace('fa-bars', 'fa-xmark');
+            } else {
+                icon.classList.replace('fa-xmark', 'fa-bars');
+            }
+        }
+
+        // Cerrar sidebar al hacer click fuera en móvil
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && 
+                sidebar.classList.contains('open') && 
+                !sidebar.contains(e.target) && 
+                !menuToggle.contains(e.target)) {
+                toggleSidebar();
+            }
+        });
+
         const WA_PHONE = '573012722472';
         let allDeals = [];
 
