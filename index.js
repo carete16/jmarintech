@@ -308,17 +308,83 @@ app.get('/p/:id', (req, res) => {
     }
 });
 
+// RUTA DINÁMICA PARA CATÁLOGO VIP (Varios productos)
+app.get('/cat/:ids', (req, res) => {
+    try {
+        const idList = req.params.ids.split(',');
+        const placeholders = idList.map(() => '?').join(',');
+        const deals = db.prepare(`SELECT * FROM published_deals WHERE id IN (${placeholders})`).all(...idList);
+        
+        if (deals.length === 0) return res.send("No se encontraron productos en este catálogo.");
+
+        const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Exclusivo | JMARIN TECH</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 40px 20px; }
+        .card-vip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; height: 100%; transition: 0.3s; }
+        .card-vip:hover { transform: translateY(-5px); border-color: #10b981; }
+        .img-box { height: 200px; background: white; display: flex; align-items: center; justify-content: center; padding: 15px; }
+        .img-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .price { color: #10b981; font-size: 1.5rem; font-weight: bold; }
+        .logo { max-width: 150px; margin-bottom: 30px; }
+        .badge-status { background: #10b981; color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 5px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <img src="/images/logo-jmarin-tech.png" class="logo" onerror="this.style.display='none'">
+        <h1 class="fw-bold mb-2">💎 Catálogo Exclusivo</h1>
+        <p class="text-white-50 mb-5">Ofertas seleccionadas disponibles para pedido inmediato</p>
+        
+        <div class="row g-4">
+            ${deals.map(deal => `
+                <div class="col-md-4">
+                    <div class="card-vip p-3">
+                        <div class="img-box mb-3 rounded-3">
+                            <img src="${deal.image}" alt="">
+                        </div>
+                        <div class="text-start">
+                            <span class="badge-status">Disponible</span>
+                            <h5 class="mt-2 fw-bold" style="font-size: 0.9rem; height: 40px; overflow: hidden;">${deal.title}</h5>
+                            <div class="price mt-2">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop)}</div>
+                            <p class="xsmall text-white-50 mt-1 mb-0" style="font-size: 0.7rem;">Incluye impuestos y envío a Colombia</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div class="mt-5 pt-5 border-top border-secondary text-white-50">
+            <p>Escríbenos para separar tu equipo con el 50% de anticipo.</p>
+            <p class="small">© 2026 JMARIN TECH - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>`;
+        res.send(html);
+    } catch (e) {
+        res.status(500).send("Error al generar el catálogo: " + e.message);
+    }
+});
+
 // ENDPOINT PARA GUARDADO RÁPIDO DESDE EBAY
 app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
     try {
         const { item } = req.body;
+        const usdPrice = (parseFloat(item.price) || 0) + (parseFloat(item.shipping) || 0);
         db.prepare(`
-            INSERT OR REPLACE INTO published_deals (id, title, image, price_cop, link, status, posted_at, tienda, categoria)
-            VALUES (?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología')
-        `).run(item.id, item.title, item.image, item.calculatedCOP, item.link);
+            INSERT OR REPLACE INTO published_deals 
+            (id, title, image, price_cop, price_offer, link, original_link, status, posted_at, tienda, categoria)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología')
+        `).run(item.id, item.title, item.image, item.calculatedCOP, usdPrice, item.link, item.link);
         res.json({ success: true });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 

@@ -984,65 +984,70 @@
             const selectedIdxs = Array.from(document.querySelectorAll('.ebay-item-check:checked')).map(cb => parseInt(cb.dataset.idx));
             if (selectedIdxs.length === 0) return alert("Selecciona al menos un producto de la lista.");
 
-            // SINCRONIZAR ITEMS SELECCIONADOS AL SERVIDOR (Para que tengan página /p/id)
-            for (const idx of selectedIdxs) {
-                const item = currentEbayResults[idx];
-                await axios.post(API_URL + '/admin/ebay/sync', { item }, {
-                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-                });
-            }
+            try {
+                // Bloquear botón con loader
+                const btn = event.target.closest('button');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i> Sincronizando...';
+                btn.disabled = true;
 
-            let title = type === 'client' ? `💎 *CATÁLOGO DE OFERTAS DISPONIBLES* 💎` : `📝 *LISTA DE CONTROL EBAY (PARA MI)* 📝`;
-            let message = `${title}\n\n`;
-            
-            selectedIdxs.forEach((idx, i) => {
-                const item = currentEbayResults[idx];
-                const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
-                
-                message += `${i + 1}. *${item.title.toUpperCase().substring(0, 65)}...*\n`;
-                
-                if (type === 'client') {
-                    const s = item.specs || {};
-                    if (s.cpu || s.ram || s.ssd) {
-                        message += `⚙️ Specs: ${s.cpu ? s.cpu + ' | ' : ''}${s.ram ? s.ram + ' | ' : ''}${s.ssd ? s.ssd : ''}\n`;
-                    }
-                    message += `✨ Estado: ${item.condition}\n`;
-                    message += `💰 *PRECIO: ${priceStr}*\n`;
-                    message += `🔗 Ver fotos: https://jmarintech.onrender.com/p/${item.id}\n`;
-                } else {
-                    message += `💰 *PRECIO: ${priceStr}*\n`;
-                    message += `💵 Costo: $${(item.price + item.shipping).toFixed(2)} USD\n`;
-                    message += `🔗 Link: ${item.link}\n`;
+                // SINCRONIZAR ITEMS SELECCIONADOS AL SERVIDOR
+                for (const idx of selectedIdxs) {
+                    const item = currentEbayResults[idx];
+                    await axios.post(API_URL + '/admin/ebay/sync', { item }, {
+                        headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                    });
                 }
-                
-                message += `\n`;
-            });
 
-            if (type === 'client') {
-                message += `_Precios finales con impuestos y envío incluidos._\n_Entrega: 10-15 días. Separa el tuyo con el 50%._`;
-            } else {
-                message += `_Resumen para gestión de compras._`;
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+
+                const ids = selectedIdxs.map(idx => currentEbayResults[idx].id).join(',');
+                const catalogUrl = `https://jmarintech.onrender.com/cat/${ids}`;
+
+                let message = `💎 *CATÁLOGO EXCLUSIVO JMARIN TECH* 💎\n\n`;
+                message += `Hola, he seleccionado estas ofertas especiales de lotes para ti. Puedes ver las fotos y precios finales en el siguiente enlace:\n\n`;
+                message += `🔗 *VER CATÁLOGO AQUÍ:* \n${catalogUrl}\n\n`;
+                message += `_Precios incluyen impuestos y envío. Entrega en 10-15 días._`;
+                
+                const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                window.open(waUrl, '_blank');
+            } catch (e) {
+                console.error(e);
+                alert("Error al sincronizar con el servidor: " + (e.response?.data?.error || e.message));
+                // Restaurar botón en caso de error
+                location.reload();
             }
-            
-            const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-            window.open(waUrl, '_blank');
         }
 
         async function shareEbayItem(idx) {
             const item = currentEbayResults[idx];
             
-            // SINCRONIZAR AL SERVIDOR PRIMERO
-            await axios.post(API_URL + '/admin/ebay/sync', { item }, {
-                headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
-            });
+            try {
+                const btn = event.target.closest('button');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btn.disabled = true;
 
-            const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
-            const landingUrl = `https://jmarintech.onrender.com/p/${item.id}`;
+                // SINCRONIZAR AL SERVIDOR PRIMERO
+                await axios.post(API_URL + '/admin/ebay/sync', { item }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
 
-            const text = `💎 *OFERTA ESPECIAL JMARIN TECH* 💎\n\n📌 *${item.title.toUpperCase()}*\n\n💰 *PRECIO FINAL: ${priceStr}*\n\n✅ Incluye Impuestos USA (7%)\n✅ Incluye Envío a Colombia (5 lbs)\n⏳ Entrega estimada: 10-15 días\n\n📸 *VER FOTOS Y DETALLES AQUÍ:* \n${landingUrl}\n\n_Escríbeme para separar el tuyo con el 50% de anticipo._`;
-            
-            const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-            window.open(waUrl, '_blank');
+                const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
+                const landingUrl = `https://jmarintech.onrender.com/p/${item.id}`;
+
+                const text = `💎 *OFERTA ESPECIAL JMARIN TECH* 💎\n\n📌 *${item.title.toUpperCase()}*\n\n💰 *PRECIO FINAL: ${priceStr}*\n\n✅ Incluye Impuestos USA (7%)\n✅ Incluye Envío a Colombia (5 lbs)\n⏳ Entrega estimada: 10-15 días\n\n📸 *VER FOTOS Y DETALLES AQUÍ:* \n${landingUrl}\n\n_Escríbeme para separar el tuyo con el 50% de anticipo._`;
+                
+                btn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> ENVIAR';
+                btn.disabled = false;
+
+                const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                window.open(waUrl, '_blank');
+            } catch (e) {
+                console.error(e);
+                alert("Error al procesar: " + (e.response?.data?.error || e.message));
+                location.reload();
+            }
         }
 
         async function importEbayItem(idx) {
