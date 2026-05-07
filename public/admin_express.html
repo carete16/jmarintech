@@ -1040,11 +1040,11 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button onclick="shareEbayItem(${idx})" class="btn btn-success btn-sm flex-grow-1 fw-bold rounded-3 py-1" style="font-size: 0.7rem;">
-                                <i class="fa-brands fa-whatsapp"></i> ENVIAR
+                            <button onclick="importEbayItem(${idx})" class="btn btn-primary btn-sm flex-grow-1 fw-bold rounded-3 py-1" style="font-size: 0.7rem;">
+                                <i class="fa-solid fa-download"></i> IMPORTAR A PENDIENTES
                             </button>
-                            <button onclick="importEbayItem(${idx})" class="btn btn-outline-light btn-sm fw-bold rounded-3 py-1" style="font-size: 0.65rem;">
-                                IMPORTAR
+                            <button onclick="shareEbayItem(${idx})" class="btn btn-success btn-sm fw-bold rounded-3 py-1" style="font-size: 0.7rem; width: 45px;" title="Enviar Rápido a WA">
+                                <i class="fa-brands fa-whatsapp"></i>
                             </button>
                         </div>
                     </div>
@@ -1136,8 +1136,55 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
 
         async function importEbayItem(idx) {
             const item = currentEbayResults[idx];
-            document.getElementById('manualUrl').value = item.link;
-            postManual();
+            
+            try {
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> IMPORTANDO...';
+                btn.disabled = true;
+
+                // 1. Análisis profundo del link (Extrae descripción y notas extras)
+                const analysisRes = await axios.post(API_URL + '/admin/express/analyze', { url: item.link }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                const data = analysisRes.data;
+
+                // 2. Crear el borrador en la DB (Pendientes) preservando los precios de eBay calculados
+                const manualPostRes = await axios.post(API_URL + '/admin/express/manual-post', {
+                    url: item.link,
+                    price: item.calculatedUSD || data.price || 0,
+                    weight: item.overrideWeight || data.weight || 0,
+                    category: data.categoria || 'Lotes',
+                    title: item.title || data.title,
+                    image: item.image || data.image,
+                    store: 'eBay USA',
+                    specs: `ESTADO: ${data.condition || item.condition || 'Usado'} | ` + (data.features || data.specs || ''),
+                    condition: data.condition || item.condition || 'Usado'
+                }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+
+                const newId = manualPostRes.data.id;
+
+                alert(`✅ LOTE IMPORTADO A PENDIENTES\n\nEl lote se ha procesado con extracción profunda de especificaciones y notas extras.`);
+                switchTab('pending');
+                await loadData(); 
+
+                // 3. Auto-rellenar las specs de CPU, RAM, Disco tal como en enlaces directos
+                if (newId) {
+                    setTimeout(() => autoFillSpecsFromAnalysis(newId, data), 400);
+                }
+
+            } catch (e) {
+                console.error("Error importando lote eBay:", e);
+                alert("❌ Error al importar lote: " + (e.response?.data?.error || e.message));
+            } finally {
+                const btn = event.target.closest('button');
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-download"></i> IMPORTAR A PENDIENTES';
+                    btn.disabled = false;
+                }
+            }
         }
 
         async function importUSAItem(base64) {
