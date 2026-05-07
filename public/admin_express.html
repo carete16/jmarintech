@@ -1093,7 +1093,7 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
                 const landingUrl = `https://jmarintech.onrender.com/p/${item.id}`;
 
-                const text = `💎 *OFERTA ESPECIAL JMARIN TECH* 💎\n\n📌 *${item.title.toUpperCase()}*\n\n💰 *PRECIO FINAL: ${priceStr}*\n\n✅ Incluye Impuestos USA (7%)\n✅ Incluye Envío a Colombia (5 lbs)\n⏳ Entrega estimada: 10-15 días\n\n📸 *VER FOTOS Y DETALLES AQUÍ:* \n${landingUrl}\n\n_Escríbeme para separar el tuyo con el 50% de anticipo._`;
+                const text = `💎 *OFERTA ESPECIAL JMARIN TECH* 💎\n\n📌 *${item.title.toUpperCase()}*\n\n💰 *PRECIO FINAL: ${priceStr}*\n\n📸 *VER FOTOS Y DETALLES AQUÍ:*\n${landingUrl}\n\n_Escríbeme para más información._`;
                 
                 btn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> ENVIAR';
                 btn.disabled = false;
