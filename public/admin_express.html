@@ -602,6 +602,8 @@
                         onclick="switchTab('published')">PUBLICADAS / VIVO</button></li>
                 <li class="nav-item"><button class="nav-link" id="tab-archived"
                         onclick="switchTab('archived')">HISTORIAL / ARCHIVO</button></li>
+                <li class="nav-item"><button class="nav-link" id="tab-ebay"
+                        onclick="switchTab('ebay')">📦 EBAY LOTES</button></li>
             </ul>
             <div class="d-flex gap-2">
                 <button onclick="runManualScan()"
@@ -637,6 +639,69 @@
         </div>
 
         <div id="main-container"></div>
+
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <h5 class="fw-bold mb-1"><i class="fa-brands fa-ebay me-2" style="font-size: 1.5rem;"></i> Buscador eBay (Lotes)</h5>
+                    <p class="small text-white-50 mb-0">Busca lotes de laptops, precios con envío y genera mensajes para WhatsApp.</p>
+                </div>
+                <div class="col-md-7">
+                    <div class="input-group">
+                        <input type="text" id="ebaySearchQuery" class="form-control border-0 bg-dark text-white" 
+                               placeholder="Ej: lot 10 dell latitude refurbished..." style="border-radius: 15px 0 0 15px; border: 1px solid #059669 !important;">
+                        <button onclick="searchEbay()" id="btnSearchEbay" class="btn btn-success px-4 fw-bold" 
+                                style="border-radius: 0 15px 15px 0; background: #10b981;">BUSCAR EN EBAY</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar de selección múltiple -->
+            <div id="ebayToolbar" class="mt-4 p-3 bg-dark rounded-4 d-none" style="border: 1px solid rgba(255,255,255,0.1);">
+                <!-- Ajuste de Parámetros Locales -->
+                <div class="row g-2 mb-3 pb-3 border-bottom border-secondary">
+                    <div class="col-4 col-md-2">
+                        <label class="xsmall fw-bold text-white-50">TAX (%)</label>
+                        <input type="number" id="ebayLocalTax" class="form-control form-control-sm bg-dark text-white border-secondary" value="7" oninput="recalculateEbayPrices()">
+                    </div>
+                    <div class="col-4 col-md-2">
+                        <label class="xsmall fw-bold text-white-50">PESO (LBS)</label>
+                        <input type="number" id="ebayLocalWeight" class="form-control form-control-sm bg-dark text-white border-secondary" value="5" oninput="recalculateEbayPrices()">
+                    </div>
+                    <div class="col-4 col-md-2">
+                        <label class="xsmall fw-bold text-white-50">$/LIBRA</label>
+                        <input type="number" id="ebayLocalRate" class="form-control form-control-sm bg-dark text-white border-secondary" value="6" oninput="recalculateEbayPrices()">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="xsmall fw-bold text-white-50">GANANCIA (%)</label>
+                        <input type="number" id="ebayLocalProfit" class="form-control form-control-sm bg-dark text-white border-secondary" value="30" oninput="recalculateEbayPrices()">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="xsmall fw-bold text-white-50">DOLAR (TRM)</label>
+                        <input type="number" id="ebayLocalTrm" class="form-control form-control-sm bg-dark text-white border-secondary" value="3950" oninput="recalculateEbayPrices()">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ebaySelectAll" onclick="toggleAllEbay(this.checked)">
+                            <label class="form-check-label text-white small fw-bold" for="ebaySelectAll">SELECCIONAR TODOS</label>
+                        </div>
+                        <span id="ebaySelectedCount" class="badge bg-success">0 Seleccionados</span>
+                    </div>
+                    <button onclick="shareSelectedEbay('client')" class="btn btn-success btn-sm fw-bold px-3">
+                        <i class="fa-brands fa-whatsapp me-1"></i> ENVIAR A CLIENTE
+                    </button>
+                    <button onclick="shareSelectedEbay('admin')" class="btn btn-outline-light btn-sm fw-bold px-3 ms-2">
+                        <i class="fa-solid fa-clipboard-list me-1"></i> COPIAR PARA MI (CON LINKS)
+                    </button>
+                </div>
+            </div>
+
+            <div id="ebaySearchResults" class="row g-3 mt-3 d-none">
+                <!-- Resultados de búsqueda eBay -->
+            </div>
+        </div>
     </div>
 
     <!-- Modal para zoom de imagen -->
@@ -682,12 +747,24 @@
             document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
             document.getElementById('tab-published').classList.toggle('active', tab === 'published');
             document.getElementById('tab-archived').classList.toggle('active', tab === 'archived');
+            document.getElementById('tab-ebay').classList.toggle('active', tab === 'ebay');
             
+            // Mostrar/Ocultar secciones
+            const mainContainer = document.getElementById('main-container');
+            const ebaySection = document.getElementById('ebay-section');
+            
+            if (tab === 'ebay') {
+                mainContainer.classList.add('d-none');
+                ebaySection.classList.remove('d-none');
+            } else {
+                mainContainer.classList.remove('d-none');
+                ebaySection.classList.add('d-none');
+                await loadData();
+            }
+
             // Mostrar botón de borrar solo en pendientes
             const btnClear = document.getElementById('btnClearPending');
             if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
-
-            await loadData();
         }
 
         async function postManual() {
@@ -795,6 +872,183 @@
                 btn.innerHTML = 'BUSCAR EN USA';
                 btn.disabled = false;
             }
+        }
+
+        let currentEbayResults = [];
+
+        async function searchEbay() {
+            const query = document.getElementById('ebaySearchQuery').value.trim();
+            if (!query) return alert("Ingresa un producto para eBay");
+
+            const btn = document.getElementById('btnSearchEbay');
+            const resultsDiv = document.getElementById('ebaySearchResults');
+            const toolbar = document.getElementById('ebayToolbar');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> BUSCANDO...';
+            btn.disabled = true;
+
+            try {
+                const res = await axios.get(API_URL + '/admin/ebay/search?q=' + encodeURIComponent(query), {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+                const results = res.data.results;
+                currentEbayResults = results;
+                resultsDiv.innerHTML = '';
+                resultsDiv.classList.remove('d-none');
+                toolbar.classList.remove('d-none');
+                document.getElementById('ebaySelectAll').checked = false;
+                updateEbayCount();
+
+                if (!results || results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="col-12 text-center text-white-50">No se encontraron resultados en eBay API.</div>';
+                    toolbar.classList.add('d-none');
+                } else {
+                    // Sincronizar parámetros locales con los globales la primera vez
+                    document.getElementById('ebayLocalTax').value = document.getElementById('globalTax').value || 7;
+                    document.getElementById('ebayLocalWeight').value = 5; // Default razonable para lotes
+                    document.getElementById('ebayLocalRate').value = document.getElementById('globalRate').value || 6;
+                    document.getElementById('ebayLocalProfit').value = document.getElementById('globalProfit').value || 30;
+                    document.getElementById('ebayLocalTrm').value = document.getElementById('globalDolarOp').value || 3950;
+                    
+                    recalculateEbayPrices();
+                }
+            } catch (e) {
+                alert("Error en eBay: " + e.message);
+            } finally {
+                btn.innerHTML = 'BUSCAR EN EBAY';
+                btn.disabled = false;
+            }
+        }
+
+        function recalculateEbayPrices() {
+            const resultsDiv = document.getElementById('ebaySearchResults');
+            if (!currentEbayResults.length) return;
+
+            const tax = (parseFloat(document.getElementById('ebayLocalTax').value) / 100) + 1;
+            const shippingLbs = parseFloat(document.getElementById('ebayLocalWeight').value) || 0;
+            const ratePerLb = parseFloat(document.getElementById('ebayLocalRate').value) || 0;
+            const profitPercent = (parseFloat(document.getElementById('ebayLocalProfit').value) || 0) / 100;
+            const trm = parseFloat(document.getElementById('ebayLocalTrm').value) || 1;
+
+            resultsDiv.innerHTML = '';
+            
+            currentEbayResults.forEach((item, idx) => {
+                const costUSD = (item.price + item.shipping) * tax;
+                const freightUSD = shippingLbs * ratePerLb;
+                const totalUSDWithProfit = (costUSD + freightUSD) * (1 + profitPercent);
+                const totalCOP = Math.round(totalUSDWithProfit * trm);
+
+                item.calculatedCOP = totalCOP;
+                item.calculatedUSD = totalUSDWithProfit.toFixed(2);
+
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4';
+                col.innerHTML = `
+                    <div class="card bg-dark border-success p-3 h-100" style="border: 1px solid #059669 !important; background: rgba(0,0,0,0.3) !important; position:relative;">
+                        <div style="position:absolute; top:10px; right:10px; z-index:10;">
+                            <input type="checkbox" class="form-check-input ebay-item-check" data-idx="${idx}" onchange="updateEbayCount()" style="width:22px; height:22px; cursor:pointer; border: 2px solid #10b981;">
+                        </div>
+                        <div class="d-flex gap-3 align-items-start">
+                            <img src="${item.image || 'https://placehold.co/100'}" style="width:70px; height:70px; object-fit:contain; border-radius:10px; background:white;">
+                            <div style="flex:1">
+                                <div class="small fw-bold text-white mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height:1.2; font-size:0.75rem; padding-right:20px;">${item.title}</div>
+                                <div class="d-flex flex-column gap-0">
+                                    <div class="text-white-50 xsmall">Costo eBay: $${(item.price + item.shipping).toFixed(2)}</div>
+                                    <div class="text-success fw-bold" style="font-size:1.1rem;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(totalCOP)}</div>
+                                    <div class="text-white-50 xsmall">Final Cliente (aprox)</div>
+                                </div>
+                                <div class="d-flex gap-1 mt-2">
+                                    <button onclick="shareEbayItem(${idx})" class="btn btn-success btn-sm py-1 flex-grow-1" style="font-size:0.6rem; background:#10b981"><i class="fa-brands fa-whatsapp"></i> ENVIAR</button>
+                                    <button onclick="importEbayItem(${idx})" class="btn btn-outline-light btn-sm py-1" style="font-size:0.6rem">IMPORTAR</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsDiv.appendChild(col);
+            });
+            updateEbayCount();
+        }
+
+        function toggleAllEbay(checked) {
+            document.querySelectorAll('.ebay-item-check').forEach(cb => cb.checked = checked);
+            updateEbayCount();
+        }
+
+        function updateEbayCount() {
+            const count = document.querySelectorAll('.ebay-item-check:checked').length;
+            document.getElementById('ebaySelectedCount').innerText = `${count} Seleccionados`;
+        }
+
+        async function shareSelectedEbay(type = 'client') {
+            const selectedIdxs = Array.from(document.querySelectorAll('.ebay-item-check:checked')).map(cb => parseInt(cb.dataset.idx));
+            if (selectedIdxs.length === 0) return alert("Selecciona al menos un producto de la lista.");
+
+            // SINCRONIZAR ITEMS SELECCIONADOS AL SERVIDOR (Para que tengan página /p/id)
+            for (const idx of selectedIdxs) {
+                const item = currentEbayResults[idx];
+                await axios.post(API_URL + '/admin/ebay/sync', { item }, {
+                    headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+                });
+            }
+
+            let title = type === 'client' ? `💎 *CATÁLOGO DE OFERTAS DISPONIBLES* 💎` : `📝 *LISTA DE CONTROL EBAY (PARA MI)* 📝`;
+            let message = `${title}\n\n`;
+            
+            selectedIdxs.forEach((idx, i) => {
+                const item = currentEbayResults[idx];
+                const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
+                
+                message += `${i + 1}. *${item.title.toUpperCase().substring(0, 65)}...*\n`;
+                
+                if (type === 'client') {
+                    const s = item.specs || {};
+                    if (s.cpu || s.ram || s.ssd) {
+                        message += `⚙️ Specs: ${s.cpu ? s.cpu + ' | ' : ''}${s.ram ? s.ram + ' | ' : ''}${s.ssd ? s.ssd : ''}\n`;
+                    }
+                    message += `✨ Estado: ${item.condition}\n`;
+                    message += `💰 *PRECIO: ${priceStr}*\n`;
+                    message += `🔗 Ver fotos: https://jmarintech.onrender.com/p/${item.id}\n`;
+                } else {
+                    message += `💰 *PRECIO: ${priceStr}*\n`;
+                    message += `💵 Costo: $${(item.price + item.shipping).toFixed(2)} USD\n`;
+                    message += `🔗 Link: ${item.link}\n`;
+                }
+                
+                message += `\n`;
+            });
+
+            if (type === 'client') {
+                message += `_Precios finales con impuestos y envío incluidos._\n_Entrega: 10-15 días. Separa el tuyo con el 50%._`;
+            } else {
+                message += `_Resumen para gestión de compras._`;
+            }
+            
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        async function shareEbayItem(idx) {
+            const item = currentEbayResults[idx];
+            
+            // SINCRONIZAR AL SERVIDOR PRIMERO
+            await axios.post(API_URL + '/admin/ebay/sync', { item }, {
+                headers: { 'x-admin-password': localStorage.getItem('adminPass') || 'Masbarato2026' }
+            });
+
+            const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.calculatedCOP);
+            const landingUrl = `https://jmarintech.onrender.com/p/${item.id}`;
+
+            const text = `💎 *OFERTA ESPECIAL JMARIN TECH* 💎\n\n📌 *${item.title.toUpperCase()}*\n\n💰 *PRECIO FINAL: ${priceStr}*\n\n✅ Incluye Impuestos USA (7%)\n✅ Incluye Envío a Colombia (5 lbs)\n⏳ Entrega estimada: 10-15 días\n\n📸 *VER FOTOS Y DETALLES AQUÍ:* \n${landingUrl}\n\n_Escríbeme para separar el tuyo con el 50% de anticipo._`;
+            
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        async function importEbayItem(idx) {
+            const item = currentEbayResults[idx];
+            document.getElementById('manualUrl').value = item.link;
+            postManual();
         }
 
         async function importUSAItem(base64) {

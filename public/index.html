@@ -921,8 +921,21 @@
         }
 
 
-        function openProductModal(id) {
-            const deal = allDeals.find(d => d.id === id);
+        async function openProductModal(id) {
+            let deal = allDeals.find(d => d.id === id);
+            
+            // MEJORA: Si el producto no está en el top 60, buscarlo individualmente en el servidor
+            if (!deal) {
+                try {
+                    const res = await fetch(`/api/deal/${id}`);
+                    if (res.ok) {
+                        deal = await res.json();
+                        // Opcional: agregarlo a la lista para no volver a pedirlo
+                        allDeals.push(deal);
+                    }
+                } catch (e) { console.error("Error buscando producto individual:", e); }
+            }
+
             if (!deal) return;
 
             const modal = document.getElementById('productModal');

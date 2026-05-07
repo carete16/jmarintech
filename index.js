@@ -263,6 +263,65 @@ app.get('/api/deals', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 1.1 OBTENER UN PRODUCTO INDIVIDUAL (PÚBLICO) - Para enlaces directos /p/ID
+app.get('/api/deal/:id', async (req, res) => {
+  try {
+    const deal = db.prepare("SELECT * FROM published_deals WHERE id = ?").get(req.params.id);
+    if (!deal) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(deal);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// RUTA DINÁMICA PARA VISTA PREVIA EN WHATSAPP (SEO)
+app.get('/p/:id', (req, res) => {
+    try {
+        const deal = db.prepare("SELECT * FROM published_deals WHERE id = ?").get(req.params.id);
+        if (!deal) return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        
+        const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(deal.price_cop);
+        
+        const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>${deal.title}</title>
+    <meta property="og:title" content="${deal.title}">
+    <meta property="og:description" content="🔥 ¡OFERTA EXCLUSIVA! Precio: ${priceStr} - JMARIN TECH">
+    <meta property="og:image" content="${deal.image}">
+    <meta property="og:url" content="https://jmarintech.onrender.com/p/${deal.id}">
+    <meta property="og:type" content="product">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>window.location.href = '/?deal=${deal.id}';</script>
+    <style>body{background:#0f172a;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}</style>
+</head>
+<body>
+    <div style="text-align:center">
+        <h2>${deal.title}</h2>
+        <p>Redirigiendo a la oferta...</p>
+    </div>
+</body>
+</html>`;
+        res.send(html);
+    } catch (e) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+});
+
+// ENDPOINT PARA GUARDADO RÁPIDO DESDE EBAY
+app.post('/api/admin/ebay/sync', authMiddleware, async (req, res) => {
+    try {
+        const { item } = req.body;
+        db.prepare(`
+            INSERT OR REPLACE INTO published_deals (id, title, image, price_cop, link, status, posted_at, tienda, categoria)
+            VALUES (?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'eBay USA', 'Tecnología')
+        `).run(item.id, item.title, item.image, item.calculatedCOP, item.link);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // --- ENDPOINT DE SALUD Y DIAGNÓSTICO (ADMIN) ---
 app.get('/api/admin/diagnostics', authMiddleware, async (req, res) => {
   const diagnostics = {
@@ -1196,6 +1255,34 @@ app.get('/api/admin/search', authMiddleware, async (req, res) => {
     res.json({ success: true, results });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 7.4.9.1 BÚSQUEDA AVANZADA EBAY (CON ENVÍO)
+app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ error: 'Query requerido' });
+  try {
+    const EbayAPI = require('./src/core/EbayAPIRadar');
+    const results = await EbayAPI.searchItems(q, 15);
+    res.json({ success: true, results });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// PROXY DE IMÁGENES PARA OCULTAR PROVEEDOR
+app.get('/api/media-proxy', async (req, res) => {
+  const { u } = req.query; // URL en base64 para más privacidad
+  if (!u) return res.status(400).send('No image');
+  try {
+    const imageUrl = Buffer.from(u, 'base64').toString('utf-8');
+    const response = await axios.get(imageUrl, { responseType: 'stream', timeout: 5000 });
+    res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    response.data.pipe(res);
+  } catch (e) {
+    res.status(404).send('Not found');
   }
 });
 

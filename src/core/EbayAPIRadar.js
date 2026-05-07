@@ -127,6 +127,59 @@ class EbayAPIRadar {
         }
         return null;
     }
+
+    /**
+     * Busca productos en eBay usando palabras clave.
+     * Ideal para "lotes" o búsquedas específicas.
+     */
+    async searchItems(query, limit = 10) {
+        const token = await this.getToken();
+        if (!token) return [];
+
+        try {
+            logger.info(`📡 [EBAY Search] Buscando: "${query}" (límite: ${limit})...`);
+            const resp = await axios.get(
+                `https://api.ebay.com/buy/browse/v1/item_summary/search`,
+                {
+                    params: { q: query, limit: limit, filter: 'buyingOptions:{FIXED_PRICE}' },
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+                    },
+                    timeout: 15000
+                }
+            );
+
+            const items = resp.data.itemSummaries || [];
+            logger.info(`✅ [EBAY Search] Se encontraron ${items.length} resultados.`);
+
+            return items.map(item => {
+                const title = item.title;
+                const ram = title.match(/(\d+)GB?\s*(RAM|DDR)/i)?.[1] || '';
+                const ssd = title.match(/(\d+)(GB|TB)?\s*(SSD|NVME|DISK|HDD)/i)?.[0] || '';
+                const cpu = title.match(/(i[3579]|Ryzen\s*\d|Apple\s*M\d)/i)?.[0] || '';
+                
+                return {
+                    id: item.itemId.split('|')[1] || item.itemId,
+                    title: title,
+                    price: parseFloat(item.price?.value || 0),
+                    currency: item.price?.currency || 'USD',
+                    image: item.image?.imageUrl || '',
+                    shipping: parseFloat(item.shippingOptions?.[0]?.shippingCost?.value || 0),
+                    condition: item.condition || 'Used',
+                    link: item.itemWebUrl,
+                    specs: {
+                        ram: ram ? ram + 'GB' : '',
+                        ssd: ssd,
+                        cpu: cpu
+                    }
+                };
+            });
+        } catch (e) {
+            logger.error(`❌ [EBAY Search] Error: ${e.response?.data?.errors?.[0]?.message || e.message}`);
+            return [];
+        }
+    }
 }
 
 module.exports = new EbayAPIRadar();
