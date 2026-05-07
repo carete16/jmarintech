@@ -306,6 +306,7 @@ app.get('/p/:id', (req, res) => {
 
         const qtyMatch = deal.title.match(/lot\s*(?:of|x)?\s*(\d+)/i);
         const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+        const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
