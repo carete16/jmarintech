@@ -369,7 +369,7 @@ app.get('/p/:id', (req, res) => {
                 ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu} ${specs.gen || ''}</li>` : ''}
                 ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram} RAM</li>` : ''}
                 ${specs.ssd ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.ssd} Almacenamiento</li>` : ''}
-                <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #0f172a; margin-left: 5px;">Refurbished</b></li>
+                <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #0f172a; margin-left: 5px;">${deal.product_condition || 'Refurbished'}</b></li>
                 <li class="spec-item"><i class="fa-solid fa-plane-arrival"></i> Importación Directa USA</li>
                 <li class="spec-item"><i class="fa-solid fa-check-double"></i> Calidad Inspeccionada</li>
             </ul>
@@ -490,7 +490,7 @@ app.get('/cat/:ids', (req, res) => {
                                 ${specs.cpu ? `<div class="mini-spec"><i class="fa-solid fa-microchip opacity-50 me-1"></i> ${specs.cpu}</div>` : ''}
                                 ${specs.ram ? `<div class="mini-spec"><i class="fa-solid fa-memory opacity-50 me-1"></i> ${specs.ram}</div>` : ''}
                                 ${specs.ssd ? `<div class="mini-spec"><i class="fa-solid fa-hard-drive opacity-50 me-1"></i> ${specs.ssd}</div>` : ''}
-                                <div class="mini-spec text-success" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-recycle me-1"></i> Refurbished</div>
+                                <div class="mini-spec text-success" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-recycle me-1"></i> ${deal.product_condition || 'Refurbished'}</div>
                             </div>
 
                             <div class="mt-auto d-flex justify-content-between align-items-center">

@@ -1692,7 +1692,7 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                 </div>`;
                 container.appendChild(card);
                 // Auto-detectar condición del producto al cargar la tarjeta
-                setTimeout(() => detectConditionFromText(item.id), 100);
+                // Se eliminó la detección automática agresiva de condición al cargar la tarjeta para respetar la selección manual del usuario.
                 // Auto-cargar precio de referencia Google Colombia
                 // YA NO AUTO-CARGAMOS (Para mayor velocidad)
                 /* if (item.title) {
