@@ -759,28 +759,40 @@
         }
 
         async function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
-            document.getElementById('tab-published').classList.toggle('active', tab === 'published');
-            document.getElementById('tab-archived').classList.toggle('active', tab === 'archived');
-            document.getElementById('tab-ebay').classList.toggle('active', tab === 'ebay');
-            
-            // Mostrar/Ocultar secciones
-            const mainContainer = document.getElementById('main-container');
-            const ebaySection = document.getElementById('ebay-section');
-            
-            if (tab === 'ebay') {
-                mainContainer.classList.add('d-none');
-                ebaySection.classList.remove('d-none');
-            } else {
-                mainContainer.classList.remove('d-none');
-                ebaySection.classList.add('d-none');
-                await loadData();
-            }
+            try {
+                currentTab = tab;
+                console.log("Cambiando a pestaña:", tab);
 
-            // Mostrar botón de borrar solo en pendientes
-            const btnClear = document.getElementById('btnClearPending');
-            if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
+                // Actualizar estados de botones
+                const tabs = ['pending', 'published', 'archived', 'ebay'];
+                tabs.forEach(t => {
+                    const el = document.getElementById(`tab-${t}`);
+                    if (el) el.classList.toggle('active', tab === t);
+                });
+                
+                const mainContainer = document.getElementById('main-container');
+                const ebaySection = document.getElementById('ebay-section');
+                const btnClear = document.getElementById('btnClearPending');
+                
+                if (tab === 'ebay') {
+                    if (mainContainer) mainContainer.style.display = 'none';
+                    if (ebaySection) {
+                        ebaySection.style.display = 'block';
+                        ebaySection.classList.remove('d-none');
+                    }
+                } else {
+                    if (mainContainer) mainContainer.style.display = 'block';
+                    if (ebaySection) {
+                        ebaySection.style.display = 'none';
+                        ebaySection.classList.add('d-none');
+                    }
+                    await loadData();
+                }
+
+                if (btnClear) btnClear.style.display = (tab === 'pending') ? 'block' : 'none';
+            } catch (err) {
+                console.error("Error al cambiar pestaña:", err);
+            }
         }
 
         async function postManual() {
@@ -1000,9 +1012,9 @@ FINAL COP: $${totalCOP.toLocaleString()}`;
                                 </div>
                                 ${item.specs ? `
                                 <div class="d-flex gap-1 mt-2 flex-wrap">
-                                    ${item.specs.cpu ? `<span class="badge bg-secondary" style="font-size:0.5rem; background:rgba(255,255,255,0.1) !important;">${item.specs.cpu.substring(0,12)}</span>` : ''}
-                                    ${item.specs.ram ? `<span class="badge bg-primary" style="font-size:0.5rem; background:#2563eb !important;">${item.specs.ram}</span>` : ''}
-                                    ${item.specs.ssd ? `<span class="badge bg-info text-dark" style="font-size:0.5rem; background:#38bdf8 !important;">${item.specs.ssd}</span>` : ''}
+                                    ${item.specs.cpu ? `<span class="badge bg-secondary" style="font-size:0.5rem; background:rgba(255,255,255,0.1) !important;">${String(item.specs.cpu).substring(0,15)}</span>` : ''}
+                                    ${item.specs.ram ? `<span class="badge bg-primary" style="font-size:0.5rem; background:#2563eb !important;">${String(item.specs.ram)}</span>` : ''}
+                                    ${item.specs.ssd ? `<span class="badge bg-info text-dark" style="font-size:0.5rem; background:#38bdf8 !important;">${String(item.specs.ssd).substring(0,15)}</span>` : ''}
                                 </div>` : ''}
                             </div>
                         </div>
