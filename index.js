@@ -1556,12 +1556,24 @@ app.get('/api/admin/ebay/search', authMiddleware, async (req, res) => {
         console.error("[eBay Scraper Fallback] Falla al leer URL directa, usando keywords:", e.message);
       }
       
-      // Fallback: extraer _nkw si el scraper falló
+      // Fallback: extraer _nkw y filtros avanzados si el scraper falló
+      let categoryId = null;
+      let aspectFilters = {};
       try {
         const urlObj = new URL(q.startsWith('http') ? q : 'https://www.ebay.com/sch/?' + q);
         const nkw = urlObj.searchParams.get('_nkw');
         if (nkw) q = nkw.replace(/\+/g, ' ');
+        
+        categoryId = urlObj.searchParams.get('_dcat') || urlObj.pathname.match(/\/sch\/(\d+)\//)?.[1];
+        
+        ['Processor', 'RAM Size', 'Model', 'Storage Type'].forEach(key => {
+            const val = urlObj.searchParams.get(key);
+            if (val) aspectFilters[key] = val.split('|');
+        });
       } catch(e) {}
+      
+      const results = await EbayAPI.searchItems(q, 15, { condition, categoryId, aspectFilters });
+      return res.json({ success: true, results });
     }
 
     // BÚSQUEDA NORMAL POR PALABRAS CLAVE (API de eBay)

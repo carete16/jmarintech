@@ -132,7 +132,7 @@ class EbayAPIRadar {
      * Busca productos en eBay usando palabras clave.
      * MEJORADO: Ahora obtiene los detalles completos de cada item para tener specs reales.
      */
-    async searchItems(query, limit = 15, condition = null) {
+    async searchItems(query, limit = 15, options = null) {
         const token = await this.getToken();
         if (!token) return [];
 
@@ -140,6 +140,12 @@ class EbayAPIRadar {
             logger.info(`📡 [EBAY Search] Buscando: "${query}" (límite: ${limit})...`);
             
             let filter = 'buyingOptions:{FIXED_PRICE}';
+            let category_ids = null;
+            let aspect_filter = '';
+
+            // Extraer condición (compatibilidad hacia atrás por si pasan string)
+            const condition = typeof options === 'string' ? options : (options ? options.condition : null);
+
             if (condition) {
                 const condMap = {
                     'CERTIFIED_REFURBISHED': '2000',
@@ -152,10 +158,30 @@ class EbayAPIRadar {
                 if (condMap[condition]) filter += `,conditions:{${condMap[condition]}}`;
             }
 
+            // Inyectar Category IDs y Aspect Filters
+            if (options && typeof options === 'object') {
+                if (options.categoryId) category_ids = options.categoryId;
+                
+                if (options.aspectFilters && Object.keys(options.aspectFilters).length > 0 && category_ids) {
+                    const aspects = [];
+                    for (const [key, values] of Object.entries(options.aspectFilters)) {
+                        // Reemplazar espacios y formatear según documentación de eBay (ej: Processor:{Intel Core i5|AMD Ryzen})
+                        aspects.push(`${key}:{${values.join('|')}}`);
+                    }
+                    aspect_filter = `categoryId:${category_ids},${aspects.join(',')}`;
+                }
+            }
+
+            const params = { q: query, limit: limit, filter: filter };
+            if (category_ids) params.category_ids = category_ids;
+            if (aspect_filter) params.aspect_filter = aspect_filter;
+
+            logger.info(`🔍 [EBAY Filters] params: ${JSON.stringify(params)}`);
+
             const resp = await axios.get(
                 `https://api.ebay.com/buy/browse/v1/item_summary/search`,
                 {
-                    params: { q: query, limit: limit, filter: filter },
+                    params: params,
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
