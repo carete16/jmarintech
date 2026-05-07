@@ -383,8 +383,10 @@ app.get('/cat/:ids', (req, res) => {
                             
                             <div class="my-3">
                                 ${specs.cpu ? `<span class="spec-tag"><i class="fa-solid fa-processor me-1"></i> ${specs.cpu}</span>` : ''}
+                                ${specs.gen ? `<span class="spec-tag"><i class="fa-solid fa-microchip me-1"></i> ${specs.gen}</span>` : ''}
                                 ${specs.ram ? `<span class="spec-tag"><i class="fa-solid fa-memory me-1"></i> ${specs.ram} RAM</span>` : ''}
                                 ${specs.ssd ? `<span class="spec-tag"><i class="fa-solid fa-hard-drive me-1"></i> ${specs.ssd}</span>` : ''}
+                                ${specs.year ? `<span class="spec-tag"><i class="fa-solid fa-calendar me-1"></i> ${specs.year}</span>` : ''}
                                 <span class="spec-tag"><i class="fa-solid fa-star me-1"></i> ${deal.product_condition || 'Usado'}</span>
                             </div>
 
