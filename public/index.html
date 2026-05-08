@@ -794,7 +794,7 @@
                 const allText = ((deal.product_condition || '') + ' ' + (deal.title || '')).toLowerCase();
                 let displayCondition = deal.product_condition || 'Nuevo';
                 if (displayCondition === 'Nuevo') {
-                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent') || allText.includes('lot of')) displayCondition = 'Refurbished';
                     else if (allText.includes('open box')) displayCondition = 'Open Box';
                     else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
                 }
@@ -1011,7 +1011,7 @@
                                 const allText = ((deal.product_condition || '') + ' ' + (deal.title || '')).toLowerCase();
                                 let displayCondition = deal.product_condition || 'Nuevo';
                                 if (displayCondition === 'Nuevo') {
-                                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent') || allText.includes('lot of')) displayCondition = 'Refurbished';
                                     else if (allText.includes('open box')) displayCondition = 'Open Box';
                                     else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
                                 }

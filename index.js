@@ -210,8 +210,8 @@ app.post('/api/admin/sync', authMiddleware, (req, res) => {
           INSERT OR REPLACE INTO published_deals 
           (id, title, selling_title, link, original_link, image, price_cop, price_offer, price_official, 
            market_price_cop, tienda, categoria, structured_specs, benefits, badge, savings, status, posted_at,
-           stock_virtual, stock_status, stock_updated_at)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           stock_virtual, stock_status, stock_updated_at, product_condition, weight, gallery, benefits, original_specs)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `).run(
           deal.id, deal.title, deal.selling_title || null, deal.link, deal.original_link || deal.link,
           deal.image, deal.price_cop || 0, deal.price_offer || 0, deal.price_official || 0,
@@ -220,7 +220,12 @@ app.post('/api/admin/sync', authMiddleware, (req, res) => {
           deal.savings || 0, 'published', deal.posted_at || new Date().toISOString(),
           deal.stock_virtual !== undefined ? deal.stock_virtual : 5,
           deal.stock_status || 'disponible',
-          deal.stock_updated_at || null
+          deal.stock_updated_at || null,
+          deal.product_condition || deal.condition || 'Nuevo',
+          deal.weight || 0,
+          deal.gallery || null,
+          deal.benefits || null,
+          deal.original_specs || null
         );
         saved++;
       } catch(e) { skipped++; }
@@ -373,7 +378,7 @@ app.get('/p/:id', (req, res) => {
                     const allText = ((deal.product_condition || '') + ' ' + (deal.original_specs || '') + ' ' + (deal.title || '')).toLowerCase();
                     let displayCondition = deal.product_condition || 'Nuevo';
                     if (displayCondition === 'Nuevo') {
-                        if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                        if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent') || allText.includes('lot of')) displayCondition = 'Refurbished';
                         else if (allText.includes('open box')) displayCondition = 'Open Box';
                         else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
                     }
@@ -487,7 +492,7 @@ app.get('/cat/:ids', (req, res) => {
                 const allText = ((deal.product_condition || '') + ' ' + (deal.original_specs || '') + ' ' + (deal.title || '')).toLowerCase();
                 let displayCondition = deal.product_condition || 'Nuevo';
                 if (displayCondition === 'Nuevo') {
-                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent') || allText.includes('lot of')) displayCondition = 'Refurbished';
                     else if (allText.includes('open box')) displayCondition = 'Open Box';
                     else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
                 }
