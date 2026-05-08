@@ -790,13 +790,22 @@
                     benefits = typeof deal.benefits === 'string' ? JSON.parse(deal.benefits) : (deal.benefits || []);
                 } catch(e) { benefits = []; }
 
+                // Detección Inteligente de Estado
+                const allText = ((deal.product_condition || '') + ' ' + (deal.title || '')).toLowerCase();
+                let displayCondition = deal.product_condition || 'Nuevo';
+                if (displayCondition === 'Nuevo') {
+                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                    else if (allText.includes('open box')) displayCondition = 'Open Box';
+                    else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
+                }
+
                 const specsHtml = `
                     <ul class="specs-list">
                         ${specs.screen ? `<li class="spec-item"><i class="fa-solid fa-desktop"></i> ${specs.screen}</li>` : ''}
                         ${specs.cpu ? `<li class="spec-item"><i class="fa-solid fa-microchip"></i> ${specs.cpu}</li>` : ''}
                         ${specs.ram ? `<li class="spec-item"><i class="fa-solid fa-memory"></i> ${specs.ram}</li>` : ''}
                         ${specs.disk ? `<li class="spec-item"><i class="fa-solid fa-hard-drive"></i> ${specs.disk}</li>` : ''}
-                        <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #475569;">${deal.product_condition || 'Nuevo'}</b></li>
+                        <li class="spec-item"><i class="fa-solid fa-tag"></i> Estado: <b style="color: #475569;">${displayCondition}</b></li>
                         <li class="spec-item"><i class="fa-solid fa-plane-arrival"></i> Importación Directa USA</li>
                         <li class="spec-item"><i class="fa-solid fa-circle-check"></i> Calidad Inspeccionada</li>
                     </ul>
@@ -998,7 +1007,16 @@
                             ${specs.cpu ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-microchip" style="color:#64748b"></i> ${specs.cpu}</div>` : ''}
                             ${specs.ram ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-memory" style="color:#64748b"></i> ${specs.ram}</div>` : ''}
                             ${specs.disk ? `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-hard-drive" style="color:#64748b"></i> ${specs.disk}</div>` : ''}
-                            <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-tag" style="color:#64748b"></i> Estado: ${deal.product_condition || 'Nuevo'}</div>
+                            ${(() => {
+                                const allText = ((deal.product_condition || '') + ' ' + (deal.title || '')).toLowerCase();
+                                let displayCondition = deal.product_condition || 'Nuevo';
+                                if (displayCondition === 'Nuevo') {
+                                    if (allText.includes('refurbish') || allText.includes('renewed') || allText.includes('certified') || allText.includes('reacondicion') || allText.includes('90-day') || allText.includes('excellent')) displayCondition = 'Refurbished';
+                                    else if (allText.includes('open box')) displayCondition = 'Open Box';
+                                    else if (allText.includes('used') || allText.includes('usado') || allText.includes('pre-owned')) displayCondition = 'Usado';
+                                }
+                                return `<div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-tag" style="color:#64748b"></i> Estado: ${displayCondition}</div>`;
+                            })()}
                             <div class="benefit-item" style="font-size: 0.8rem;"><i class="fa-solid fa-plane-arrival" style="color:#64748b"></i> Importación Directa USA</div>
                         </div>
                     </div>
